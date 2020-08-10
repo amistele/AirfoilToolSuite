@@ -1,0 +1,31 @@
+*************** Airfoil Tool Suite - HELP ***************
+*
+*
+*
+*
+Overview
+---------
+ - Airfoil Tool Suite is a collection of tools for airfoil analysis and modification, developed by Andrew Mistele
+ - This project is being devloped with MATLAB R2018b. Compatibility with older versions of MATLAB has not been tested
+ - All dependencies are contained within the repository
+
+ - Tools are selected and run from the main menu window, which also has the airfoil buffer manager
+	- When a tool is run, the airfoil buffer is copied over to the active tool's airfoil buffer
+
+Main Menu
+---------
+ - Running "main.m" opens the main menu for this tool
+ - From the main menu, airfoils can be loaded in using the right panel
+	- Note that airfoil coordinates must be in the Selig format with no header lines
+ - Once airfoils of interest are loaded in, airfoil tools can be launched with these airfoils buffered using the left panel
+
+Tools
+---------
+ - autoXFOIL   : automates XFOIL runs and data processing and formatting
+	       - useful for batch runs and sweeps across flight conditions
+ - CamberUtils : airfoil geometry tool. Airfoil coordinate files can be deconstructed into camber and thickness distributions
+	       - camber and thickness distributions can be saved, scaled, and/or added to a buffer
+               - camber and thickness distributions can be read in to the buffer
+               - from the buffer, airfoil distributions can be scaled and/or interchanged with other airfoils and reconstructed to form new airfoils
+ - LERfinder   : GUI for estimating leading-edge radius of airfoils, a parameter used for aerodynamics and survivability
+
