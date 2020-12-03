@@ -1,6 +1,11 @@
 function main
+     
+    % DECLARE GLOBALS
+    global font
+    
+    % VERSION STRING
     ver = 'v 0.1 (alpha)';
-
+    
     % CREATE MAIN FIGURE GUI WINDOW
     f = figure('Name','ATS (alpha v 0.1)','NumberTitle','off','units','normalized');
     font = 'Comic Sans MS';
@@ -9,18 +14,15 @@ function main
     uiElem = struct();          % STRUCTURE OF BUTTONS ON MAIN GUI
     bufferAirfoils = struct();  % STRUCTURE OF AIRFOILS THAT HAVE BEEN LOADED IN BY USER
     bufferAirfoils.new = true;  % PROPERTY INITIALIZATION USED FOR ASSIGNING INDICES TO AIRFOILS LOADED IN
-
+    
+    % ADD BIN TO PATH TO ACCESS OTHER FUNCTIONS
+    addpath('bin');
+    
 %% MAIN UI LAYOUT - STATIC ELEMENTS
     % TITLES
     % PANELS
     % PANEL LABELS
-    
-    % PANEL AROUND LEFT SIDE UI ELEMENTS
-    uiElem.panel_left  = uipanel(f,'Position',[0.10 0.10 0.35 0.60]);
-    
-    % PANEL AROUND RIGHT SIDE UI ELEMENTS
-    uiElem.panel_right = uipanel(f,'Position',[0.55 0.10 0.35 0.60]);
-    
+ 
     % TITLE LINE - AIRFOIL TOOL SUITE
     uiElem.text_title = uicontrol(f,'Style','text','String','Welcome to Airfoil Tool Suite',...
         'Units','normalized','Position',[0.1 0.8 0.8 0.1],...
@@ -35,14 +37,20 @@ function main
     uiElem.text_version = uicontrol(f,'Style','text','String',ver,...
         'Units','normalized','Position',[0.1 0.7125 0.8 0.1],...
         'Fontweight','bold','FontSize',10,'FontName',font);
+    
+    % PANEL AROUND LEFT SIDE UI ELEMENTS
+    uiElem.panel_left  = uipanel(f,'Position',[0.10 0.10 0.35 0.60]);
+    
+    % PANEL AROUND RIGHT SIDE UI ELEMENTS
+    uiElem.panel_right = uipanel(f,'Position',[0.55 0.10 0.35 0.60]);
 
     % LEFT PANEL LABEL - TOOLS
-    ui.Elem.text_left = uicontrol(f,'Style','text','String','Tools',...
+    uiElem.text_left = uicontrol(f,'Style','text','String','Tools',...
         'Units','normalized','Position',[0.125 0.575 0.3 0.1],...
         'FontWeight','bold','FontSize',12,'FontName',font);
 
     % RIGHT PANEL LABEL - AIRFOILS (BUFFER)
-    ui.Elem.text_right = uicontrol(f,'Style','text','String','Airfoils',...
+    uiElem.text_right = uicontrol(f,'Style','text','String','Airfoils',...
         'Units','normalized','Position',[0.575 0.575 0.3 0.1],...
         'FontWeight','bold','FontSize',12,'FontName',font);
 
@@ -114,11 +122,15 @@ function main
     % DELETE  - deleteAirfoil()
     % REPANEL - repanelAirfoil()
     
+    % CALLBACKS DEFINED LOCALLY
     uiElem.button_HELP.Callback    = @openHelp;
     uiElem.button_LOAD.Callback    = @loadAirfoil;
     uiElem.button_DELETE.Callback  = @deleteAirfoil;
     uiElem.button_REPANEL.Callback = @repanelAirfoil;
     uiElem.button_DEBUG.Callback   = @debugTool;
+    
+    % CALLBACKS STORED IN \bin
+    uiElem.button_autoXFOIL.Callback = @call_autoXFOIL;
 
 
 %% CALLBACK FUNCTION DEFINITIONS
@@ -226,7 +238,7 @@ function main
             idx = idxs(end); % chopping off absolute path to avoid XFOIL filename truncation due to memory overflow
             
             % CONTINUE WRITING XFOIL SCRIPT
-            fprintf(fhand,'PSAVE %s\n\n',[bufferAirfoils(i).relpath(idx+1:end-4) '-HiRes',bufferAirfoils(i).relpath(end-3:end)]);
+            fprintf(fhand,'PSAVE %s\n\n',[bufferAirfoils(i).relpath(1:end-4) '-HiRes',bufferAirfoils(i).relpath(end-3:end)]);
             fprintf(fhand,'quit\n\n');
             fprintf(fhand,'repanel.txt (END)');
             
@@ -236,7 +248,7 @@ function main
             delete('repanel.txt');
             
             % READ IN RE-PANELED AIRFOIL DATA FROM XFOIL OUTPUT
-            raw = load([bufferAirfoils(i).path(idx+1:end-4) '-HiRes',bufferAirfoils(i).path(end-3:end)]);
+            raw = load([bufferAirfoils(i).relpath(1:end-4) '-HiRes',bufferAirfoils(i).path(end-3:end)]);
             j = length(bufferAirfoils) + 1;
             bufferAirfoils(j).x = raw(:,1); % store airfoil data to buffer
             bufferAirfoils(j).y = raw(:,2);
@@ -262,8 +274,23 @@ function main
     end
             
             
+    % AUTOXFOIL BUTTON - ON CLOCK, IF > 0 AIRFOILS ARE SELECTED, CALLS AUTOXFOIL UI
+    %   FILES - \bin\ui_autoXFOIL
+    function call_autoXFOIL(src,event)
+        if length(uiElem.list_AIRFOILS.String) == 0
             
-
+            % DISPLAY AN ERROR IF THE BUTTON IS CLICKED W/O FOILS SELECTED
+            msgbox('At least one airfoil must be selected!','Error','error');
+        else
+            
+            % CALL AUTOXFOIL AND PASS SELECTED AIRFOILS INTO ITS BUFFER
+            ui_autoXFOIL(bufferAirfoils(uiElem.list_AIRFOILS.Value),...
+                uiElem.list_AIRFOILS.String(uiElem.list_AIRFOILS.Value),...
+                f);
+        end
+    end
+        
+    
 
 
 end
