@@ -25,33 +25,33 @@ function main
  
     % TITLE LINE - AIRFOIL TOOL SUITE
     uiElem.text_title = uicontrol(f,'Style','text','String','Welcome to Airfoil Tool Suite',...
-        'Units','normalized','Position',[0.1 0.8 0.8 0.1],...
+        'Units','normalized','Position',[0.1 0.8+0.1 0.8 0.1],...
         'Fontweight','bold','FontSize',14,'FontName',font);
     
     % AUTHOR LINE - DEVELOPED BY ANDREW MISTELE
     uiElem.text_author = uicontrol(f,'Style','text','String','Developed by Andrew Mistele (2020)',...
-        'Units','normalized','Position',[0.1 0.75 0.8 0.1],...
+        'Units','normalized','Position',[0.1 0.75+0.1 0.8 0.1],...
         'Fontweight','bold','FontSize',10,'FontName',font);
     
     % VERSION LINE - CURRENT TOOL VERSION
     uiElem.text_version = uicontrol(f,'Style','text','String',ver,...
-        'Units','normalized','Position',[0.1 0.7125 0.8 0.1],...
+        'Units','normalized','Position',[0.1 0.7125+0.1 0.8 0.1],...
         'Fontweight','bold','FontSize',10,'FontName',font);
     
     % PANEL AROUND LEFT SIDE UI ELEMENTS
-    uiElem.panel_left  = uipanel(f,'Position',[0.10 0.10 0.35 0.60]);
+    uiElem.panel_left  = uipanel(f,'Position',[0.10 0.10 0.35 0.60+0.1]);
     
     % PANEL AROUND RIGHT SIDE UI ELEMENTS
-    uiElem.panel_right = uipanel(f,'Position',[0.55 0.10 0.35 0.60]);
+    uiElem.panel_right = uipanel(f,'Position',[0.55 0.10 0.35 0.60+0.1]);
 
     % LEFT PANEL LABEL - TOOLS
     uiElem.text_left = uicontrol(f,'Style','text','String','Tools',...
-        'Units','normalized','Position',[0.125 0.575 0.3 0.1],...
+        'Units','normalized','Position',[0.125 0.575+0.1 0.3 0.1],...
         'FontWeight','bold','FontSize',12,'FontName',font);
 
     % RIGHT PANEL LABEL - AIRFOILS (BUFFER)
     uiElem.text_right = uicontrol(f,'Style','text','String','Airfoils',...
-        'Units','normalized','Position',[0.575 0.575 0.3 0.1],...
+        'Units','normalized','Position',[0.575 0.575+0.1 0.3 0.1],...
         'FontWeight','bold','FontSize',12,'FontName',font);
 
     
@@ -62,22 +62,22 @@ function main
     
     % BUTTON - AUTOXFOIL
     uiElem.button_autoXFOIL     = uicontrol(f,'Style','pushbutton','String','autoXFOIL',...
-        'Units','normalized','Position',[0.125 0.5 0.3 0.1],...
+        'Units','normalized','Position',[0.125 0.5+0.1 0.3 0.1],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
     % BUTTON - CAMBERUTILS
     uiElem.button_CAMBERUTILS   = uicontrol(f,'Style','pushbutton','String','CamberUtils',...
-        'Units','normalized','Position',[0.125 0.375 0.3 0.1],...
+        'Units','normalized','Position',[0.125 0.375+0.1 0.3 0.1],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
     % BUTTON - LERFINDER
     uiElem.button_LERFINDER     = uicontrol(f,'Style','pushbutton','String','LERfinder',...
-        'Units','normalized','Position',[0.125 0.250 0.3 0.1],...
+        'Units','normalized','Position',[0.125 0.250+0.1 0.3 0.1],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
     % BUTTON - HELP
     uiElem.button_HELP          = uicontrol(f,'Style','pushbutton','String','Help',...
-        'Units','normalized','Position',[0.175 0.125 0.2 0.05],...
+        'Units','normalized','Position',[0.175 0.125+0.1 0.2 0.05],...
         'FontWeight','bold','FontSize',10,'FontName',font);
 
 
@@ -89,22 +89,27 @@ function main
     
     % BUTTON - LOAD NEW
     uiElem.button_LOAD    = uicontrol(f,'Style','pushbutton','String','Load New',...
-        'Units','normalized','Position',[0.625 0.550 0.20 0.05],...
+        'Units','normalized','Position',[0.6 0.550+0.1 0.25 0.05],...
+        'FontWeight','bold','FontSize',10,'FontName',font);
+    
+    % BUTTON - GENERATE NACA
+    uiElem.button_NACA    = uicontrol(f,'Style','pushbutton','String','Generate NACA',...
+        'Units','normalized','Position',[0.6 0.50+0.1 0.25 0.05],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
     % BUTTON - REPANEL
     uiElem.button_REPANEL = uicontrol(f,'Style','pushbutton','String','Repanel',...
-        'Units','normalized','Position',[0.625 0.175 0.20 0.05],...
+        'Units','normalized','Position',[0.6 0.175 0.25 0.05],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
     % BUTTON - DELETE
     uiElem.button_DELETE  = uicontrol(f,'Style','pushbutton','String','Delete',...
-        'Units','normalized','Position',[0.625 0.125 0.20 0.05],...
+        'Units','normalized','Position',[0.6 0.125 0.25 0.05],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
     % LIST - BUFFER AIRFOILS
     uiElem.list_AIRFOILS  = uicontrol(f,'Style','list',...
-        'Units','normalized','Position',[0.575  0.250 0.30 0.275],...
+        'Units','normalized','Position',[0.575  0.250 0.30 0.325],...
         'String',{},'FontName',font);
 
 %% MAIN MENU BUTTONS - DEBUG
@@ -128,6 +133,7 @@ function main
     uiElem.button_DELETE.Callback  = @deleteAirfoil;
     uiElem.button_REPANEL.Callback = @repanelAirfoil;
     uiElem.button_DEBUG.Callback   = @debugTool;
+    uiElem.button_NACA.Callback    = @generateNaca;
     
     % CALLBACKS STORED IN \bin
     uiElem.button_autoXFOIL.Callback = @call_autoXFOIL;
@@ -194,9 +200,80 @@ function main
     end
 
 
+    % GENERATE NACA BUTTON - USE XFOIL TO GENERATE NACA 4 OR 5 DIGIT FOIL
+    %   FILES - < nacaXXXX.dat > OR < nacaXXXXX.dat >
+    function generateNaca(src,event)
+        num = inputdlg({'Enter 4- or 5-digit NACA designation (numbers only):','Enter number of points (494 max):'},...
+            'Specify NACA Airfoil',[1 60; 1 60]);
+        try
+            % TYPECAST STRING TO NUMBER
+            dig = str2num(num{1});
+            pts = str2num(num{2});
+            
+            % IF ENTERED NUMBER IS NOT 4 OR 5 DIGITS, RETURN
+            if length(num{1}) ~= 4 && length(num{1}) ~= 5
+                msgbox('One of the inputs was invalid!','Error','error');
+                return
+            end
+            
+            % IF ENTERED NUMBER OF POINTS > 494 or < 10, RETURN
+            % IF ENTERED DESIGNATION < 0, RETURN
+            % IF ENTERED POINTS OR DESIGNATION NOT INTEGERS, RETURN
+            if ((pts > 494 || pts < 10) || dig < 0) || ((mod(dig,1) ~= 0) || (mod(pts,1) ~= 0))
+                msgbox('One of the inputs was invalid!','Error','error');
+                return
+            end
+            
+            % WRITE XFOIL SCRIPT TO GENERATE NACA AIRFOIL COORDINATE FILE
+            fhand = fopen('genNACA.txt','w');
+            fprintf(fhand, 'NACA %i\n',dig);
+            fprintf(fhand,'ppar\n');
+            fprintf(fhand,'n %i\n\n\n',pts);
+            fprintf(fhand,'PSAVE %s\n\n',sprintf('naca%i.dat',dig));
+            fprintf(fhand,'quit\n\n');
+            fprintf(fhand,'genNACA.txt (END)');
+            
+            % EXECUTE AIRFOIL SCRIPT
+            fclose(fhand);
+            system('bin\xfoil\xfoil.exe < genNACA.txt');
+            delete('genNACA.txt');
+            
+            % READ IN AIRFOIL FROM XFOIL OUTPUT
+            raw = load(sprintf('naca%i.dat',dig));
+            
+            % DETERMINE NEXT BUFFER INDEX
+            if length(bufferAirfoils) == 0 || bufferAirfoils(1).new
+                j = 1;
+            else
+                j = length(bufferAirfoils) + 1;
+            end
+            
+            % STORE READ-IN DATA
+            bufferAirfoils(j).x = raw(:,1);
+            bufferAirfoils(j).y = raw(:,2);
+            bufferAirfoils(j).pts = pts;
+            bufferAirfoils(j).name = sprintf('naca%i',dig);
+            bufferAirfoils(j).path = [pwd '\' bufferAirfoils(j).name '.dat'];
+            
+            % FLAG STRUCTURE AS NO LONGER NEW (IN CASE IT WAS)
+            bufferAirfoils(1).new = false;
+            
+            % CREATE LIST NAME FOR NEWLY READ-IN AIRFOIL
+            uiElem.list_AIRFOILS.String{end+1} = [bufferAirfoils(j).name sprintf(' (%i pts)',pts)];
+                    
+        % IF THE ENTERED STRINGS CANNOT BE TYPECAST TO NUMBERS, RETURN
+        catch
+            
+            % DISPLAY WARNING IF INVALID INPUTS
+            msgbox('One of the inputs was invalid!','Error','error');
+            return
+        end
+    end
+    
+
     % DELETE BUTTON - ON CLICK, REMOVE SELECTED AIRFOIL(S) FROM BUFFER
     %   FILES - < NONE >
-    function deleteAirfoil(src,event) % remove airfoil from listbox
+    function deleteAirfoil(src,event)
         if length(uiElem.list_AIRFOILS.String) > 0
             
             % INDEX(ICES) OF AIRFOILS SELECTED FROM LIST
@@ -205,7 +282,7 @@ function main
             % REMOVE AIRFOILS FROM UI LIST
             uiElem.list_AIRFOILS.String(idx) = [];
             
-            % REMPVE AIRFOIL FROM BUFFER STRUCTURE
+            % REMOVE AIRFOIL FROM BUFFER STRUCTURE
             bufferAirfoils(idx) = [];
             
             % SELECT FIRST AIRFOIL IN LIST
