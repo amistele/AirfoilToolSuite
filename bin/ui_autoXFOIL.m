@@ -12,6 +12,7 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
 
     % DECLARE GLOBALS
     global font
+    addpath('bin')
     
     % PRE-ALLOCATE STRUCTURES
     uiLocal = struct();     % UI ELEMENTS ON LOCAL FIGURE
@@ -29,6 +30,9 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     settings.AOA_min  = -10;
     settings.AOA_up   = 0.25;
     settings.AOA_down = -0.1;
+    
+    settings.cmref    = 0.25;
+    settings.Ncrit    = 9;
 
     % CREATE AUTOXFOIL GUI WINDOW
     pos = fParent.Position + [ 0.05 -0.05 fParent.Position(3) 0];
@@ -60,31 +64,76 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     uiLocal.panel_right  = uipanel(f,'Position',[eOff+0.666 3*eOff width height]); 
     
     
-    % LEFT PANEL LABEL - BUFFER
-    uiLocal.text_left = uicontrol(f,'Style','text','String','Airfoils',...
+    
+    % SELECT MODE LABEL
+    uiLocal.text_center = uicontrol(f,'Style','text','String','Select Mode',...
         'Units','normalized','Position',[eOff*2 0.7 0.333-4*eOff 0.1],...
         'Fontweight','bold','FontSize',12,'FontName',font);
     
-    % CENTER PANEL LABEL - MAIN
-    uiLocal.text_center = uicontrol(f,'Style','text','String','Select Mode',...
+    % REYNOLDS NUMBER LABEL
+    uiLocal.text_sub_left = uicontrol(f,'Style','text','String','Reynolds #',...
+        'Units','normalized','Position',[0.35-0.333 0.4 0.125 0.1],...
+        'Fontweight','bold','FontSize',12,'FontName',font);
+    
+    % MACH NUMBER LABEL
+    uiLocal.text_sub_right = uicontrol(f,'Style','text','String','Mach #',...
+        'Units','normalized','Position',[0.525-0.333 0.4 0.125 0.1],...
+        'Fontweight','bold','FontSize',12,'FontName',font);
+    
+    % AIRFOILS LABEL
+    uiLocal.text_left = uicontrol(f,'Style','text','String','Airfoils',...
         'Units','normalized','Position',[0.333+eOff*2 0.7 0.333-4*eOff 0.1],...
         'Fontweight','bold','FontSize',12,'FontName',font);
     
-    % CENTER PANEL LABEL - SUB LEFT
-    uiLocal.text_sub_left = uicontrol(f,'Style','text','String','Reynolds Number',...
-        'Units','normalized','Position',[0.35 0.4 0.125 0.1],...
-        'Fontweight','bold','FontSize',12,'FontName',font);
-    
-    % CENTER PANEL LABEL - SUB RIGHT
-    uiLocal.text_sub_right = uicontrol(f,'Style','text','String','Mach Number',...
-        'Units','normalized','Position',[0.525 0.4 0.125 0.1],...
-        'Fontweight','bold','FontSize',12,'FontName',font);
-    
-    % RIGHT PANEL LABEL
-    uiLocal.text_right = uicontrol(f,'Style','text','String','Angle of Attack',...
+    % ANGLE OF ATTACK LABEL
+    uiLocal.text_right_up = uicontrol(f,'Style','text','String','Angle of Attack',...
         'Units','normalized','Position',[0.666+eOff*2 0.7 0.333-4*eOff 0.1],...
         'Fontweight','bold','FontSize',12,'FontName',font);
 
+    % MOMENT COEFFICIENT REFERENCE LABEL
+    uiLocal.text_right_lw = uicontrol(f,'Style','text','String','Moment Coefficient Reference',...
+        'Units','normalized','Position',[0.666+eOff*2 0.4-0.025 0.333-4*eOff 0.1],...
+        'Fontweight','bold','FontSize',12,'FontName',font);
+
+    % CMREF SLIDER LABEL - MIN, LE
+    uiLocal.text_slider_min = uicontrol(f,'Style','text','String','LE',...
+        'Units','normalized','Position',[2*eOff+0.666 0.325-0.025 (width-2*eOff)/4 0.05],...
+        'Fontweight','bold','FontSize',10,'FontName',font,...
+        'HorizontalAlignment','left');
+    
+    % CMREF SLIDER LABEL - MAX, TE
+    uiLocal.text_slider_max = uicontrol(f,'Style','text','String','TE',...
+        'Units','normalized','Position',[2*eOff+0.666+(width-2*eOff)/4 0.325-0.025 (width-2*eOff)/4 0.05],...
+        'Fontweight','bold','FontSize',10,'FontName',font,...
+        'HorizontalAlignment','right');
+    
+    % CMREF SLIDER LABEL - MID, C/2
+    uiLocal.text_slider_mid = uicontrol(f,'Style','text','String','c/2',...
+        'Units','normalized','Position',[2*eOff+0.666+(width-2*eOff)/8 0.325-0.025 (width-2*eOff)/4 0.05],...
+        'FontWeight','bold','FontSize',10,'FontName',font);
+    
+    % NCRIT LABEL
+    uiLocal.text_right_dn = uicontrol(f,'Style','text','String','Ncrit (Advanced)',...
+        'Units','normalized','Position',[0.666+eOff*2 0.2-0.05 0.333-4*eOff 0.1],...
+        'Fontweight','bold','FontSize',12,'FontName',font);
+    
+    % NCRIT SLIDER LABEL - MIN, 4
+    uiLocal.text_slider_min = uicontrol(f,'Style','text','String','4',...
+        'Units','normalized','Position',[2*eOff+0.666 0.125-0.05 (width-2*eOff)/4 0.05],...
+        'Fontweight','bold','FontSize',10,'FontName',font,...
+        'HorizontalAlignment','left');
+    
+    % NCRIT SLIDER LABEL - MAX, 14
+    uiLocal.text_slider_max = uicontrol(f,'Style','text','String','14',...
+        'Units','normalized','Position',[2*eOff+0.666+(width-2*eOff)/4 0.125-0.05 (width-2*eOff)/4 0.05],...
+        'Fontweight','bold','FontSize',10,'FontName',font,...
+        'HorizontalAlignment','right');
+    
+    % NCRIT SLIDER LABEL - MID, 9
+    uiLocal.text_slider_mid = uicontrol(f,'Style','text','String','9',...
+        'Units','normalized','Position',[2*eOff+0.666+(width-2*eOff)/8 0.125-0.05 (width-2*eOff)/4 0.05],...
+        'FontWeight','bold','FontSize',10,'FontName',font);
+    
     
 %% MAIN MENU BUTTONS - GENERAL
     % DEBUG
@@ -96,21 +145,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
 
     
 %% MAIN MENU BUTTONS - LEFT PANEL
-    % AIRFOIL BUFFER DISPLAY
-    % RENAME
-    
-    % LIST - BUFFER AIRFOILS
-    uiLocal.list_AIRFOILS = uicontrol(f,'Style','list',...
-        'Units','normalized','Position',[3*eOff 0.275 width-4*eOff 0.45],...
-        'Max',length(listString),'String',listString,'FontSize',10,'FontName',font);
-    
-    % BUTTON - RENAME
-    uiLocal.button_RENAME  = uicontrol(f,'Style','pushbutton','String','Rename',...
-        'Units','normalized','Position', [0.333/2-0.1 0.175 0.2 0.075],...
-        'Fontweight','bold','FontSize',10,'FontName',font);
-    
-    
-%% MAIN MANU BUTTONS - CENTER PANEL
     % SELECT MODE:
     %   BUTTON GROUP
     %   MODE 1
@@ -122,7 +156,7 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % M  LISTBOX
     
     % BUTTON GROUP FOR RADIO BUTTONS
-    uiLocal.modeGroup = uibuttongroup('Visible','off','Position',[2*eOff+0.333 0.525 width-2*eOff 0.2125],...
+    uiLocal.modeGroup = uibuttongroup('Visible','off','Position',[2*eOff 0.525 width-2*eOff 0.2125],...
         'SelectionChangeFcn',@modeSelection);
     
     % RADIO BUTTON 1 - COMPARE AIRFOILS
@@ -148,57 +182,89 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     
     % CHECKBOX FOR INVISCID
     uiLocal.check_invisc = uicontrol(f,'Style','checkbox',...
-        'Units','normalized','Position',[0.35 0.4 0.125 0.05],...
+        'Units','normalized','Position',[0.35-0.333 0.4 0.125 0.05],...
         'String','Inviscid','FontSize',10,'FontName',font);
     
     % CHECKBOX FOR INCOMPRESSIBLE
     uiLocal.check_incomp = uicontrol(f,'Style','checkbox',...
-        'Units','normalized','Position',[0.525 0.4 0.125 0.05],...
+        'Units','normalized','Position',[0.525-0.333 0.4 0.125 0.05],...
         'String','Incompressible','FontSize',10,'FontName',font);
     
     % LISTBOX FOR RN VALUES
     uiLocal.list_RN = uicontrol(f,'Style','list',...
-        'Units','normalized','Position',[0.35 0.2 0.125 0.2],...
+        'Units','normalized','Position',[0.35-0.333 0.2 0.125 0.2],...
         'String',{},'FontSize',10,'FontName',font);
     
     % LISTBOX FOR M  VALUES
     uiLocal.list_M = uicontrol(f,'Style','list',...
-        'Units','normalized','Position',[0.525 0.2 0.125 0.2],...
+        'Units','normalized','Position',[0.525-0.333 0.2 0.125 0.2],...
         'String',{},'FontSize',10,'FontName',font);
     
     % EDIT BOX FOR RN VALUES
     uiLocal.edit_RN = uicontrol(f,'Style','edit',...
-        'Units','normalized','Position',[0.35 0.15 0.125 0.05],...
+        'Units','normalized','Position',[0.35-0.333 0.15 0.125 0.05],...
         'String','(Enter RN)','FontSize',10,'FontName',font);
     
     % EDIT BOX FOR M  VALUES
     uiLocal.edit_M  = uicontrol(f,'Style','edit',...
-        'Units','normalized','Position',[0.525 0.15 0.125 0.05],...
+        'Units','normalized','Position',[0.525-0.333 0.15 0.125 0.05],...
         'String','(Enter M)','FontSize',10,'FontName',font);
     
     % BUTTON - ADD FOR RN VALUES
     uiLocal.add_RN = uicontrol(f,'Style','pushbutton','String','Add',...
-        'Units','normalized','Position',[0.35 0.1 0.125/2 0.05],...
+        'Units','normalized','Position',[0.35-0.333 0.1 0.125/2 0.05],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
     % BUTTON - ADD FOR M VALUES
     uiLocal.add_M = uicontrol(f,'Style','pushbutton','String','Add',...
-        'Units','normalized','Position',[0.525 0.1 0.125/2 0.05],...
+        'Units','normalized','Position',[0.525-0.333 0.1 0.125/2 0.05],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
     % BUTTON - DELETE RN VALUES
     uiLocal.del_RN = uicontrol(f,'Style','pushbutton','String','Delete',...
-        'Units','normalized','Position',[0.35+0.125/2 0.1 0.125/2 0.05],...
+        'Units','normalized','Position',[0.35-0.333+0.125/2 0.1 0.125/2 0.05],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
     % BUTTON - DELETE M VALUES
     uiLocal.del_M  = uicontrol(f,'Style','pushbutton','String','Delete',...
-        'Units','normalized','Position',[0.525+0.125/2 0.1 0.125/2 0.05],...
+        'Units','normalized','Position',[0.525-0.333+0.125/2 0.1 0.125/2 0.05],...
         'FontWeight','bold','FontSize',10,'FontName',font);
+    
+    
+%% MAIN MANU BUTTONS - CENTER PANEL
+        % AIRFOIL BUFFER DISPLAY
+    % RENAME
+    % RUN ANALYSIS
+    % XFOIL DOCS
+    
+    % LIST - BUFFER AIRFOILS
+    uiLocal.list_AIRFOILS = uicontrol(f,'Style','list',...
+        'Units','normalized','Position',[3*eOff+0.333 0.35 width-4*eOff 0.385],...
+        'Max',length(listString),'String',listString,'FontSize',10,'FontName',font);
+    
+    % BUTTON - RENAME
+    uiLocal.button_RENAME  = uicontrol(f,'Style','pushbutton','String','Rename',...
+        'Units','normalized','Position', [0.333/2-0.1+0.333 0.26 0.2 0.075],...
+        'Fontweight','bold','FontSize',10,'FontName',font);
+    
+    % CALL AUTOXFOIL
+    uiLocal.RUN_ANALYSIS = uicontrol(f','Style','pushbutton','String','Run Analysis',...
+        'Units','normalized','Position',[eOff*2+0.333 0.15 0.333-4*eOff 0.075],...
+        'FontSize',14,'Fontweight','bold','FontName',font);
+
+    % DOCS - XFOIL
+    uiLocal.docs_XFOIL = uicontrol(f,'Style','pushbutton','String','XFOIL Docs',...
+        'Units','normalized','Position',[eOff*2+0.333 0.075 0.333-4*eOff 0.075],...
+        'FontSize',12,'Fontweight','bold','FontName',font);
     
     
 %% MAIN MENU BUTTONS - RIGHT PANEL
     % AOA SETTING DISPLAY
+    % AOA SETTING EDIT
+    % AOA UPDATE
+    % NCRIT SLIDER
+    % NCRIT HELP
+    % NCRIT DOCS
     
     % LIST - AOA SETTINGS
     uiLocal.list_AOA = uicontrol(f,'Style','list','String',...
@@ -221,7 +287,42 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         'Units','normalized','Position',[eOff+0.833 0.525 (width-4*eOff)/2 0.05],...
         'FontSize',10,'FontWeight','bold','FontName',font);
     
+    % SLIDER - CMREF
+    uiLocal.slider_CMREF = uicontrol(f,'Style','slider','Min',0,'Max',1,'Value',0.25,...
+        'Units','normalized','Position',[2*eOff+0.666 0.375-0.025 (width-2*eOff)/2 0.05],...
+        'BackgroundColor',[1 1 1]);
     
+    % EDIT - CMREF
+    uiLocal.edit_CMREF = uicontrol(f,'Style','edit','String','0.25','enable','inactive',...
+        'Units','normalized','Position',[eOff+0.833 0.375-0.025 (width-4*eOff)/2 0.05],...
+        'FontSize',10,'FontName',font);
+    
+    % HELP - CMREF
+    uiLocal.help_CMREF = uicontrol(f,'Style','pushbutton','String','Help',...
+        'Units','normalized','Position',[eOff+0.833 0.325-0.025 (width-4*eOff)/2 0.05],...
+        'FontSize',10','Fontweight','bold','FontName',font);
+    
+    % SLIDER - NCRIT
+    uiLocal.slider_NCRIT = uicontrol(f,'Style','slider','Min',4,'Max',14,'Value',9,...
+        'Units','normalized','Position',[2*eOff+0.666 0.175-0.05 (width-2*eOff)/2 0.05],...
+        'BackgroundColor',[1 1 1]);
+    
+    % EDIT - NCRIT
+    uiLocal.edit_NCRIT   = uicontrol(f,'Style','edit','String','9','enable','inactive',...
+        'Units','normalized','Position',[eOff+0.833 0.175-0.05 (width-4*eOff)/2 0.05],...
+        'FontSize',10,'FontName',font);
+    
+    % HELP - NCRIT
+    uiLocal.help_NCRIT   = uicontrol(f,'Style','pushbutton','String','Help',...
+        'Units','normalized','Position',[eOff+0.833 0.125-0.05 (width-4*eOff)/4 0.05],...
+        'FontSize',10,'Fontweight','bold','FontName',font);
+
+    % DOCS - NCRIT
+    uiLocal.docs_NCRIT   = uicontrol(f,'Style','pushbutton','String','Docs',...
+        'Units','normalized','Position',[eOff+0.833+(width-4*eOff)/4 0.125-0.05 (width-4*eOff)/4 0.05],...
+        'FontSize',10,'Fontweight','bold','FontName',font);
+        
+
 %% CALLBACK FUNCTION ASSIGNMENTS
     % DEBUG - debugTool()
     
@@ -243,6 +344,15 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     uiLocal.update_AOA.Callback    = @updateListAOA;
     uiLocal.help_AOA.Callback      = @helpAOA;
     
+    uiLocal.slider_CMREF.Callback  = @updateEditCMREF;
+    uiLocal.help_CMREF.Callback    = @helpCMREF;
+    
+    uiLocal.slider_NCRIT.Callback  = @updateEditNCRIT;
+    uiLocal.help_NCRIT.Callback    = @helpNCRIT;
+    uiLocal.docs_NCRIT.Callback    = @docsNCRIT;
+    
+    uiLocal.docs_XFOIL.Callback    = @docsXFOIL;
+    uiLocal.RUN_ANALYSIS.Callback  = @runAnalysis;
     
 %% CALLBACK FUNCTION DEFINITIONS
 
@@ -380,7 +490,7 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         
         % CHECK IF INVISCID IS FLAGGED - IF IT IS, RETURN
         if uiLocal.check_invisc.Value == 1
-            msgbox('Deselect ''Inviscid?'' to Enter Reynolds Numbers','Notice','warn');
+            msgbox('Deselect ''Inviscid'' to Enter Reynolds Numbers','Notice','warn');
             return
         end
         
@@ -421,7 +531,7 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         
         % CHECK IF ICOMPRESSIBLE IS FLAGGED - IF IT IS, RETURN
         if uiLocal.check_incomp.Value == 1
-            msgbox('Deselect ''Incompressible?'' to Enter Mach Numbers','Notice','warn');
+            msgbox('Deselect ''Incompressible'' to Enter Mach Numbers','Notice','warn');
             return
         end
         
@@ -637,4 +747,101 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         % CREATE MESSAGE BOX
         msgbox(text,'Angle of Attack Help','help');
     end
+
+
+    % UPATE EDIT CMREF - PUSH ROUNDED SLIDER VALUE TO EDIT BOX
+    %   FILES - < NONE >
+    function updateEditCMREF(src,event)
+        
+        % GET CURRENT SLIDER VALUE
+        val = uiLocal.slider_CMREF.Value;
+        
+        % ROUND VALUE TO 2 DECIMAL POITNS
+        val = round(val,2);
+        
+        % UPDATE SLIDER VALUE, EDIT BOX, AND SETTINGS
+        uiLocal.slider_CMREF.Value = val;
+        uiLocal.edit_CMREF.String  = sprintf('%.2f',val);
+        settings.cmref             = val;
+    end
+
+    
+    % HELP CMREF - OPEN MESSAGE
+    %   FILES - < NONE >
+    function helpCMREF(src,event)
+        
+        % TEXT FOR MESSAGE BOX
+        text = {
+        'The moment reference coefficient is the chordwise location about which the pitching moment is measured.',...
+        'The default value is 0.25, corresponding to the quarter-chord location, and this is recommended for general use.',...
+        'A value of ''0'' corresponds to the Leading Edge, and ''1'' to the Trailing Edge.'
+        };
+    
+        % CREATE MESSAGE BOX
+        msgbox(text,'CMREF Help','help');
+    end
+    
+    % UPDATE EDIT NCRIT - PUSH ROUNDED SLIDER VALUE TO EDIT BOX
+    %   FILES - < NONE >
+    function updateEditNCRIT(src,event)
+        
+        % GET CURRENT SLIDER VALUE
+        val = uiLocal.slider_NCRIT.Value;
+        
+        % ROUND VALUE TO NEAREST DECIMAL POINT
+        val = round(val,1);
+        
+        % UPDATE SLIDER VALUE, EDIT BOX, AND SETTINGS
+        uiLocal.slider_NCRIT.Value = val;
+        uiLocal.edit_NCRIT.String  = sprintf('%.1f',val);
+        settings.Ncrit             = val;
+        
+    end
+
+    
+    % HELP NCRIT - OPEN MESSAGE
+    %   FILES - < NONE >
+    function helpNCRIT(src,event)
+       
+        % TEXT FOR MESSAGE BOX
+        text = {
+        '''NCrit'' is a parameter used by XFOIL to define the turbulence level.',...
+        'The default value is 9, and this is recommended for general use.',...
+        'XFOIL documentation on Ncrit and the turbulence level can be found by selecting ''Docs''.'
+        };
+    
+        % CREATE MESSAGE BOX
+        msgbox(text,'Ncrit Help','help');
+        
+    end
+    
+    % DOCS NCRIT - OPEN DOCS EXCERPT
+    %   FILES - < bin\docs_ncrit.txt >
+    function docsNCRIT(src,event)
+        
+        % OPEN DOCS
+       system('start bin\docs_ncrit.txt'); 
+    end
+        
+
+    % DOCS XFOIL - OPEN XFOIL DOCS
+    %   FILES - < bin\docs_xfoil.txt >
+    function docsXFOIL(src,event)
+        
+        % OPEN DOCS
+        system('start bin\docs_xfoil.txt');
+    end
+
+    
+    % RUN ANALYSIS - CALL AUTOXFOIL
+    %   FILES - < bin\autoXFOIL.m >
+    function runAnalysis(src,event)
+        
+        % GET INDICES OF SELECTED AIRFOILS
+        idcs = uiLocal.list_AIRFOILS.Value;
+        
+        % CALL AUTOXFOIL
+        %tool_autoXFOIL(bufferLocal(idcs),settings);
+    end
+    
 end
