@@ -1,3 +1,4 @@
 xfoil-format.docx
 *.asv
 *.dat
+bin/autoXFOIL_legacy.m
