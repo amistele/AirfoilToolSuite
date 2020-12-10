@@ -1,0 +1,61 @@
+Excerpt from XFOIL documentation:
+
+
+                -- Transition criterion --
+
+Transition in an XFOIL solution is triggered by one of two ways:
+
+  free  transition:  e^n criterion is met
+ forced transition:  a trip or the trailing edge is encountered
+
+The e^n method is always active, and free transition can occur
+upstream of the trip.  The e^n method has the user-specified 
+parameter "Ncrit", which is the log of the amplification factor
+of the most-amplified frequency which triggers transition.
+A suitable value of this parameter depends on the ambient
+disturbance level in which the airfoil operates, and mimics
+the effect of such disturbances on transition.  Below are typical 
+values of Ncrit for various situations.
+
+     situation             Ncrit
+  -----------------        -----
+  sailplane                12-14
+  motorglider              11-13
+  clean wind tunnel        10-12
+  average wind tunnel        9     <=  standard "e^9 method"
+  dirty wind tunnel         4-8
+
+Note: The e^n method in XFOIL is actually the simplified envelope 
+version, which is the same as the full e^n method only for flows 
+with constant H(x). If H is not constant, the two methods differ
+somewhat, but this difference is typically within the uncertainty
+in choosing Ncrit.
+
+The e^n method is only appropriate for predicting transition in 
+situations where the growth of 2-D Tollmien-Schlichting waves via
+linear instability is the dominant transition-initiating mechanism.  
+Fortunately, this happens to be the case in a vast majority of airfoil 
+applications.  Other possible mechanisms are:
+
+* Crossflow instabilities. These occur on swept wings with significant  
+  favorable chordwise pressure gradients.
+
+* Attachment-line transition.  This requires large sweep, large LE
+  radius, and a large Reynolds number.  Occurs primarily on big jets.
+
+* Bypass transition.  This occurs in cases with sufficient wall
+  roughness and/or large freestream turbulence or vibration levels.
+  The linear-instability phase predicted by the e^n method is
+  "bypassed", giving relatively early transition.  Usually occurs
+  in favorable pressure gradients, while the linear-instability
+  mechanism usually dominates in adverse pressure gradients.
+
+If any of these alternative transition mechanisms are present, the
+trips must be set to mimick their effect.  The bypass transition
+mechanism can be mimicked to some extent by the e^n method by 
+setting Ncrit to a small value --- Ncrit=1 or less.  This will 
+cause transition just after linear instability begins.  For
+very large freestream turbulence or roughness in favorable
+pressure gradients, bypass transition can occur before the 
+linear instability threshold, and in this case trips will have 
+to be set as well.
