@@ -368,11 +368,9 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     %   FILES - < NONE >
     function renameAirfoil(src,event)
         if length(uiLocal.list_AIRFOILS.Value) > 1
-            
             % DISPLAY AN ERROR IF THE BUTTON IS CLICK W/ > 1 FOIL SELECTED
             msgbox('Only one airfoil may be renamed at a time!','Error','error');
         else
-            
             % PROMPT FOR NEW NAME FOR AIRFOIL
             newName = inputdlg('Enter new name for airfoil:','Rename Airfoil',[1 60]);
             
@@ -397,7 +395,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % RADIO - SET MODE 1 (AIRFOIL SWEEP)
     %   FILES - < NONE >
     function setMode1(src,event)
-        
         % UPDATE AIRFOIL LISTBOX SETTINGS
         uiLocal.list_AIRFOILS.Max = length(uiLocal.list_AIRFOILS.String);
         
@@ -414,7 +411,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % RADIO - SET MODE 2 (RN SWEEP)
     %   FILES - < NONE >
     function setMode2(src,event)
-        
         % UPDATE AIRFOIL LISTBOX SETTINGS
         uiLocal.list_AIRFOILS.Value = 1;
         uiLocal.list_AIRFOILS.Max   = 1;
@@ -437,7 +433,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % RADIO - SET MODE 3 (M SWEEP)
     %   FILES - < NONE >
     function setMode3(src,event)
-        
         % UPDATE AIRFOIL LISTBOX SETTINGS
         uiLocal.list_AIRFOILS.Value = 1;
         uiLocal.list_AIRFOILS.Max   = 1;
@@ -459,7 +454,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % CHECK - SET INVISCID
     %   FILES - < NONE >
     function setInvisc(src,event)
-        
         % UPDATE AIRFOIL LISTBOX SETTINGS
         uiLocal.list_RN.Value  = 1;
         uiLocal.list_RN.Max    = 1;
@@ -473,7 +467,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % CHECK - SET INCOMPRESSIBLE
     % FILES - < NONE >
     function setIncomp(src,event)
-         
         % UPDATE AIRFOIL LISTBOX SETTINGS
         uiLocal.list_M.Value  = 1;
         uiLocal.list_M.Max    = 1;
@@ -487,7 +480,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % BUTTON - ADD RN
     %   FILES - < NONE >
     function addReynolds(src,event)
-        
         % CHECK IF INVISCID IS FLAGGED - IF IT IS, RETURN
         if uiLocal.check_invisc.Value == 1
             msgbox('Deselect ''Inviscid'' to Enter Reynolds Numbers','Notice','warn');
@@ -496,7 +488,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         
         % CATCH TYPECASTING FAILURES
         try
-            
             % CHECK IF VALID ENTRY - IF IT ISN'T, RETURN
             text = uiLocal.edit_RN.String;
             num = str2num(text);
@@ -528,7 +519,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % BUTTON - ADD M
     %   FILES - < NONE >
     function addMach(src,event)
-        
         % CHECK IF ICOMPRESSIBLE IS FLAGGED - IF IT IS, RETURN
         if uiLocal.check_incomp.Value == 1
             msgbox('Deselect ''Incompressible'' to Enter Mach Numbers','Notice','warn');
@@ -537,7 +527,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         
         % CATCH TYPECASTING FAILURES
         try
-            
             % CHECK IF VALID ENTRY - IF IT ISN'T, RETURN
             text = uiLocal.edit_M.String;
             num = str2num(text);
@@ -570,7 +559,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % BUTTON - DELETE RN
     %   FILES - < NONE >
     function deleteReynolds(src,event)
-        
         % IF NOTHING IN LIST, RETURN
         if length(uiLocal.list_RN.String) == 0
             return
@@ -602,7 +590,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % BUTTON - DELETE M
     %   FILES - < NONE >
     function deleteMach(src,event)
-        
         % IF NOTHING IN LIST, RETURN
         if length(uiLocal.list_M.String) == 0
             return
@@ -634,7 +621,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % UPDATE AOA EDIT FIELD BASED ON LIST SELECTION
     %   FILES - < NONE >
     function updateEditAOA(src,event)
-        
         % GET POSITION AND TEXT OF SELECTED ENTRY
         idx = uiLocal.list_AOA.Value;
         text = uiLocal.list_AOA.String{idx};
@@ -646,10 +632,10 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         uiLocal.edit_AOA.String = text(ids+2:end);
     end
 
+
     % UPDATE AOA LIST ON BUTTON PRESS
     %   FILES - < NONE >
     function updateListAOA(src,event)
-        
         % GET INDEX OF CURRENTLY SELECTED LIST ITEM
         listID = uiLocal.list_AOA.Value;
         
@@ -728,7 +714,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % HELP AOA - OPEN HELP WINDOW EXPLAINING AOA SETTINGS
     %   FILES - < NONE >
     function helpAOA(src,event)
-        
         % TEXT FOR MESSAGE BOX
         text = {
             'AOA max   : maximum angle of attack',...
@@ -752,7 +737,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % UPATE EDIT CMREF - PUSH ROUNDED SLIDER VALUE TO EDIT BOX
     %   FILES - < NONE >
     function updateEditCMREF(src,event)
-        
         % GET CURRENT SLIDER VALUE
         val = uiLocal.slider_CMREF.Value;
         
@@ -769,7 +753,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % HELP CMREF - OPEN MESSAGE
     %   FILES - < NONE >
     function helpCMREF(src,event)
-        
         % TEXT FOR MESSAGE BOX
         text = {
         'The moment reference coefficient is the chordwise location about which the pitching moment is measured.',...
@@ -781,10 +764,10 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         msgbox(text,'CMREF Help','help');
     end
     
+
     % UPDATE EDIT NCRIT - PUSH ROUNDED SLIDER VALUE TO EDIT BOX
     %   FILES - < NONE >
     function updateEditNCRIT(src,event)
-        
         % GET CURRENT SLIDER VALUE
         val = uiLocal.slider_NCRIT.Value;
         
@@ -802,7 +785,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % HELP NCRIT - OPEN MESSAGE
     %   FILES - < NONE >
     function helpNCRIT(src,event)
-       
         % TEXT FOR MESSAGE BOX
         text = {
         '''NCrit'' is a parameter used by XFOIL to define the turbulence level.',...
@@ -815,19 +797,18 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         
     end
     
+
     % DOCS NCRIT - OPEN DOCS EXCERPT
     %   FILES - < bin\docs_ncrit.txt >
     function docsNCRIT(src,event)
-        
         % OPEN DOCS
-       system('start bin\docs_ncrit.txt'); 
+        system('start bin\docs_ncrit.txt'); 
     end
         
 
     % DOCS XFOIL - OPEN XFOIL DOCS
     %   FILES - < bin\docs_xfoil.txt >
     function docsXFOIL(src,event)
-        
         % OPEN DOCS
         system('start bin\docs_xfoil.txt');
     end
@@ -836,12 +817,18 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % RUN ANALYSIS - CALL AUTOXFOIL
     %   FILES - < bin\autoXFOIL.m >
     function runAnalysis(src,event)
-        
         % GET INDICES OF SELECTED AIRFOILS
         idcs = uiLocal.list_AIRFOILS.Value;
         
-        % CALL AUTOXFOIL
-        %tool_autoXFOIL(bufferLocal(idcs),settings);
+        % CHECK TO MAKE SURE INPUTS ARE VALID
+        % ALL INPUTS EXCEPT AOAMAX AND AOA MIN ARE PREVIOUSLY CHECKED
+        if settings.AOA_max <= settings.AOA_min
+            msgbox('Make sure AOA max > AOA min before running!','Warning','warn')
+        else
+            % CALL AUTOXFOIL
+            newBuffer = bufferLocal(idcs);
+            autoXFOIL(newBuffer,settings);
+        end
     end
     
 end
