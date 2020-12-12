@@ -1,8 +1,9 @@
 *************** Airfoil Tool Suite - HELP ***************
-*
-*
-*
-*
+*							*
+*							*
+*							*
+*********************************************************
+
 Overview
 ---------
  - Airfoil Tool Suite is a collection of tools for airfoil analysis and modification, developed by Andrew Mistele
@@ -18,6 +19,8 @@ Main Menu
  - From the main menu, airfoils can be loaded in using the right panel
 	- Note that airfoil coordinates must be in the Selig format with no header lines
  - Once airfoils of interest are loaded in, airfoil tools can be launched with these airfoils buffered using the left panel
+	- Before launching a tool, highlight in the "Airfoils" window the airfoils that you would like transferred to the tool's buffer
+ - NOTE: the "Delete" button in the right panel clears selected airfoil(s) from the buffer, it does NOT delete the files they were loaded in from
 
 Tools
 ---------
@@ -27,5 +30,5 @@ Tools
 	       - camber and thickness distributions can be saved, scaled, and/or added to a buffer
                - camber and thickness distributions can be read in to the buffer
                - from the buffer, airfoil distributions can be scaled and/or interchanged with other airfoils and reconstructed to form new airfoils
- - LERfinder   : GUI for estimating leading-edge radius of airfoils, a parameter used for aerodynamics and survivability
+ - LERfinder   : GUI for estimating leading-edge radius of airfoils, a parameter used for aerodynamics and other purposes
 
