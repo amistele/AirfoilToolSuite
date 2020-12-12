@@ -144,6 +144,7 @@ function main
     % HELP BUTTON - ON BUTTONCLICK, OPEN HELP FILE
     %   FILES - HELP.TXT
     function openHelp(src,event)
+        % OPEN HELP FILE
         system('start help.txt');
     end
     
@@ -152,7 +153,6 @@ function main
     %   FILES - < ANY LOADED AIRFOIL >
     %   READS IN RAW AIRFOIL DATA AND STORES TO AIRFOIL BUFFER
     function loadAirfoil(src,event)
-        
         % UI LOAD FILE
         [file,path] = uigetfile({'*.dat';'*.txt'},'Select Airfoil Coordinates File');
         
@@ -165,7 +165,6 @@ function main
             
         % IF A FILE IS SELECTED
         else
-            
             % READ IN RAW AIRFOIL DATA FROM THE FILE
             raw = load([path file]);
             
@@ -297,7 +296,6 @@ function main
     % REPANEL BUTTON - ON CLICK, USE XFOIL TO REPANEL AIRFOIL TO 494 POINTS
     %   FILES - bin\xfoil
     function repanelAirfoil(src,event)
-        
         % FOR EACH SELECTED AIRFOIL
         for k = 1:length(uiElem.list_AIRFOILS.Value)
             
