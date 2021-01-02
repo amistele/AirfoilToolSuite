@@ -65,8 +65,8 @@ function main
         'Units','normalized','Position',[0.125 0.5+0.1 0.3 0.1],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
-    % BUTTON - CAMBERUTILS
-    uiElem.button_CAMBERUTILS   = uicontrol(f,'Style','pushbutton','String','CamberUtils',...
+    % BUTTON - CTUTILS
+    uiElem.button_ctUtils       = uicontrol(f,'Style','pushbutton','String','ctUtils',...
         'Units','normalized','Position',[0.125 0.375+0.1 0.3 0.1],...
         'FontWeight','bold','FontSize',10,'FontName',font);
     
@@ -137,6 +137,7 @@ function main
     
     % CALLBACKS STORED IN \bin
     uiElem.button_autoXFOIL.Callback = @call_autoXFOIL;
+    uiElem.button_ctUtils.Callback   = @call_ctUtils;
 
 
 %% CALLBACK FUNCTION DEFINITIONS
@@ -349,17 +350,29 @@ function main
     end
             
             
-    % AUTOXFOIL BUTTON - ON CLOCK, IF > 0 AIRFOILS ARE SELECTED, CALLS AUTOXFOIL UI
-    %   FILES - \bin\ui_autoXFOIL
+    % AUTOXFOIL BUTTON - ON CLICK, IF > 0 AIRFOILS ARE SELECTED, CALLS AUTOXFOIL UI
+    %   FILES - \bin\ui_autoXFOIL.m
     function call_autoXFOIL(src,event)
         if length(uiElem.list_AIRFOILS.String) == 0
-            
             % DISPLAY AN ERROR IF THE BUTTON IS CLICKED W/O FOILS SELECTED
             msgbox('At least one airfoil must be selected!','Error','error');
         else
-            
             % CALL AUTOXFOIL AND PASS SELECTED AIRFOILS INTO ITS BUFFER
             ui_autoXFOIL(bufferAirfoils(uiElem.list_AIRFOILS.Value),...
+                uiElem.list_AIRFOILS.String(uiElem.list_AIRFOILS.Value),...
+                f);
+        end
+    end
+
+    % CTUTILS BUTTON - ON CLICK, IF > 0 AIRFOILS ARE SELECTED, CALLS CTUTILS UI
+    %   FILES - \bin\ui_ctUtils.m
+    function call_ctUtils(src,event)
+        if length(uiElem.list_AIRFOILS.String) == 0
+            % DISPLAY AN ERROR IF THE BUTTON IS CLICKED W/O FOILS SELECTED
+            msgbox('At least one airfoil must be selected!','Error','error');
+        else
+            % CALL CTUTILS AND PASS SELECTED AIRFOILS INTO ITS BUFFER
+            ui_ctUtilsFinder(bufferAirfoils(uiElem.list_AIRFOILS.Value),...
                 uiElem.list_AIRFOILS.String(uiElem.list_AIRFOILS.Value),...
                 f);
         end
