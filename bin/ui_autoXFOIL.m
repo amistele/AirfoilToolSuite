@@ -1,8 +1,8 @@
 function ui_autoXFOIL(bufferLocal,listString,fParent)
 % INPUTS
-%   - bufferLocal : structure of local 
+%   - bufferLocal : structure of local airfoils and their data
 %   - listString  : cell array of airfoil list names from buffer window
-%   - fParents    : object of parent figure
+%   - fParent     : object of parent figure
 % 
 % OUTPUTS
 %   - < none >
@@ -50,9 +50,9 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         'Fontweight','bold','FontSize',14,'FontName',font);
     
     % SOME PANEL SETTINGS
-    eOff   = 0.01;          % EDGE OFFSET
-    width  = 0.333 - 2*eOff; % PANEL WIDTH
-    height = 0.80;          % PANEL HEIGHT
+    eOff   = 0.01;              % EDGE OFFSET
+    width  = 0.333 - 2*eOff;    % PANEL WIDTH
+    height = 0.80;              % PANEL HEIGHT
     
     % LEFT PANEL
     uiLocal.panel_left   = uipanel(f,'Position',[eOff 3*eOff width height]);
@@ -62,7 +62,6 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     
     % RIGHT PANEL
     uiLocal.panel_right  = uipanel(f,'Position',[eOff+0.666 3*eOff width height]); 
-    
     
     
     % SELECT MODE LABEL
@@ -231,8 +230,8 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
         'FontWeight','bold','FontSize',10,'FontName',font);
     
     
-%% MAIN MANU BUTTONS - CENTER PANEL
-        % AIRFOIL BUFFER DISPLAY
+%% MAIN MENU BUTTONS - CENTER PANEL
+    % AIRFOIL BUFFER DISPLAY
     % RENAME
     % RUN ANALYSIS
     % XFOIL DOCS
