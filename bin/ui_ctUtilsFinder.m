@@ -177,89 +177,8 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         idx = uiLocal.list_AIRFOILS.Value;
         settings.plottedID = idx;
         
-        % SET CURRENT AXES IN CASE OTHER WINDOWS / PLOTS ARE OPEN
-        axes(uiLocal.plot_LE);
-        cla(uiLocal.plot_LE);
-        
-        % GET AIRFOIL CALCULATED LE LOCATIONS
-        [idGeom, idThetaMin] = calcLE(bufferLocal(idx).x,bufferLocal(idx).y);
-        
-        % GET AIRFOIL TE LOCATION
-        [xTE, yTE, isBlunt] = locateTE(bufferLocal(idx).x,bufferLocal(idx).y);
-        bufferLocal(idx).isBlunt = isBlunt;
-        bufferLocal(idx).xTE     = xTE;
-        bufferLocal(idx).yTE     = yTE;
-        
-        % CALCULATE CORRESPONDING CHORDS
-        xGeomLE  = bufferLocal(idx).x(idGeom);
-        yGeomLE  = bufferLocal(idx).y(idGeom);
-        xThetaLE = bufferLocal(idx).x(idThetaMin); 
-        yThetaLE = bufferLocal(idx).y(idThetaMin);
-        chordGeom  = norm([xGeomLE-xTE yGeomLE-yTE]);
-        chordTheta = norm([xThetaLE-xTE yGeomLE-yTE]);
-        
-        % CALCULATE INCIDENCE FOR BOTH CHORDS USING DOT PRODUCT
-        vUpperGeom  = [xGeomLE-xTE yGeomLE-yTE 0];
-        vUpperTheta = [xThetaLE-xTE yThetaLE-yTE 0];
-        vLower      = [-xTE -yTE 0];
-        
-        incidenceGeom  = acosd( dot(vUpperGeom,vLower) / (norm(vUpperGeom)*norm(vLower)) );
-        incidenceTheta = acosd( dot(vUpperTheta,vLower) / (norm(vUpperTheta)*norm(vLower)) );
-        
-        % STORE POTENTIAL LEs, CHORDs, AND INCIDENCEs TO AIRFOIL BUFFER STRUCTURE
-        bufferLocal(idx).geomID         = idGeom;
-        bufferLocal(idx).thetaID        = idThetaMin;
-        bufferLocal(idx).chordGeom      = chordGeom;
-        bufferLocal(idx).chordTheta     = chordTheta;
-        bufferLocal(idx).incidenceGeom  = incidenceGeom;
-        bufferLocal(idx).incidenceTheta = incidenceTheta;
-        
-        
-        % CREATE ARRAY FOR PLOT OBJECTS
-        pObjs = [];
-        hold on
-        
-        % PLOT AIRFOIL
-        pObjs(1) = plot(bufferLocal(idx).x,bufferLocal(idx).y,'k.-');
-        
-        % PLOT LE POINTS
-        pObjs(2) = plot(bufferLocal(idx).x(idGeom),bufferLocal(idx).y(idGeom),'bo','markersize',12);
-        pObjs(3) = plot(bufferLocal(idx).x(idThetaMin),bufferLocal(idx).y(idThetaMin),'r*','markersize',12);
-        
-        % PLOT CHORDLINES
-        pObjs(4) = plot([xTE xGeomLE],[yTE yGeomLE],'--','color',[0.5 0.5 0.5]);
-        pObjs(5) = plot([xTE xThetaLE],[yTE yThetaLE],'--','color',[0.5 0.5 0.5]);
-        
-        % SETTING PLOT LIMITS TO INCLUDE ALL POINTS ( AND THE ORIGIN )
-        xVals = [-0.001 0 0.01 bufferLocal(idx).x(idGeom) bufferLocal(idx).x(idThetaMin)];
-        yVals = [-0.01 0 0.01  bufferLocal(idx).y(idGeom) bufferLocal(idx).y(idThetaMin)];
-        
-        % PLOT SCALING
-        %xLimits = [min(xVals) max(xVals)];
-        %yLimits = [min(yVals) max(yVals)];
-        %xlim(xLimits)
-        %ylim(yLimits)
-        axis equal
-        
-        % PLOT LEGEND
-        legend(pObjs(2:3),'Nearest to Origin','Minimum Curvature','location','north')
-        
-        % PUSH LE DATA TO LIST BOXES:
-        % INDICES
-        uiLocal.list_VALUES_GEOM.String{1}  = sprintf('%i',idGeom);
-        uiLocal.list_VALUES_THETA.String{1} = sprintf('%i',idThetaMin);
-        
-        % CHORD
-        uiLocal.list_VALUES_GEOM.String{2}  = sprintf('%.4f',chordGeom);
-        uiLocal.list_VALUES_THETA.String{2} = sprintf('%.4f',chordTheta);
-        
-        % INCIDENCE
-        uiLocal.list_VALUES_GEOM.String{3}  = sprintf('%.4f deg',incidenceGeom);
-        uiLocal.list_VALUES_THETA.String{3} = sprintf('%.4f deg',incidenceTheta);
-        
-        % (X,Y)
-        uiLocal.list_VALUES_GEOM.String{4}  = sprintf('(%.1e,%.1e)',xGeomLE,yGeomLE);
-        uiLocal.list_VALUES_THETA.String{4} = sprintf('(%.1e,%.1e)',xThetaLE,yThetaLE);
+        % UPDATE PLOT
+        updatePlot(bufferLocal(idx).x,bufferLocal(idx).y,idx);
         
     end
 
@@ -313,97 +232,11 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
                     xNew = xNew / sf;
                     yNew = yNew / sf;
                     
-                    % UPDATE AIRFOIL PLOT ON AXES
-                    % SET CURRENT AXES IN CASE OTHER WINDOWS / PLOTS ARE OPEN
-                    axes(uiLocal.plot_LE);
-                    cla(uiLocal.plot_LE);
-
-                    % GET AIRFOIL CALCULATED LE LOCATIONS
-                    [idGeom, idThetaMin] = calcLE(xNew,yNew);
-
-                    % GET AIRFOIL TE LOCATION
-                    [xTE, yTE, isBlunt] = locateTE(xNew,yNew);
-                    bufferLocal(idx).isBlunt = isBlunt;
-                    bufferLocal(idx).xTE     = xTE;
-                    bufferLocal(idx).yTE     = yTE;
-
-                    % CHECK IF TE IS ON CENTERLINE
-                    isCenterline = yTE == 0;
-
-                    % CALCULATE CORRESPONDING CHORDS
-                    xGeomLE  = xNew(idGeom);
-                    yGeomLE  = yNew(idGeom);
-                    xThetaLE = xNew(idThetaMin); 
-                    yThetaLE = yNew(idThetaMin);
-                    chordGeom  = norm([xGeomLE-xTE yGeomLE-yTE]);
-                    chordTheta = norm([xThetaLE-xTE yGeomLE-yTE]);
-
-                    % CALCULATE INCIDENCE FOR BOTH CHORDS USING DOT PRODUCT
-                    vUpperGeom  = [xGeomLE-xTE yGeomLE-yTE 0];
-                    vUpperTheta = [xThetaLE-xTE yThetaLE-yTE 0];
-                    vLower      = [-xTE -yTE 0];
-
-                    incidenceGeom  = acosd( dot(vUpperGeom,vLower) / (norm(vUpperGeom)*norm(vLower)) );
-                    incidenceTheta = acosd( dot(vUpperTheta,vLower) / (norm(vUpperTheta)*norm(vLower)) );
-
-                    % STORE POTENTIAL LEs, CHORDs, AND INCIDENCEs TO AIRFOIL BUFFER STRUCTURE
-                    bufferLocal(idx).geomID         = idGeom;
-                    bufferLocal(idx).thetaID        = idThetaMin;
-                    bufferLocal(idx).chordGeom      = chordGeom;
-                    bufferLocal(idx).chordTheta     = chordTheta;
-                    bufferLocal(idx).incidenceGeom  = incidenceGeom;
-                    bufferLocal(idx).incidenceTheta = incidenceTheta;
-
-
-                    % CREATE ARRAY FOR PLOT OBJECTS
-                    pObjs = [];
-                    hold on
-
-                    % PLOT AIRFOIL
-                    pObjs(1) = plot(xNew,yNew,'k.-');
-
-                    % PLOT LE POINTS
-                    pObjs(2) = plot(xNew(idGeom),yNew(idGeom),'bo','markersize',12);
-                    pObjs(3) = plot(xNew(idThetaMin),yNew(idThetaMin),'r*','markersize',12);
-
-                    % PLOT CHORDLINES
-                    pObjs(4) = plot([xTE xGeomLE],[yTE yGeomLE],'--','color',[0.5 0.5 0.5]);
-                    pObjs(5) = plot([xTE xThetaLE],[yTE yThetaLE],'--','color',[0.5 0.5 0.5]);
-
-                    % SETTING PLOT LIMITS TO INCLUDE ALL POINTS ( AND THE ORIGIN )
-                    xVals = [-0.001 0 0.01 xNew(idGeom) xNew(idThetaMin)];
-                    yVals = [-0.01 0 0.01  yNew(idGeom) yNew(idThetaMin)];
-
-                    % PLOT SCALING
-                    %xLimits = [min(xVals) max(xVals)];
-                    %yLimits = [min(yVals) max(yVals)];
-                    %xlim(xLimits)
-                    %ylim(yLimits)
-                    axis equal
-
-                    % PLOT LEGEND
-                    legend(pObjs(2:3),'Nearest to Origin','Minimum Curvature','location','north')
+                    % UPDATE PLOT
+                    updatePlot(xNew,yNew,idx);
                     
                     % SET 'SELECTED AIRFOIL' INDEX TO NEGATIVE SO IT CAN'T BE RE-UPDATED
                     settings.plottedID = -1;
-                    
-                    % UPDATE LIST BOXES
-                    % PUSH LE DATA TO LIST BOXES:
-                    % INDICES
-                    uiLocal.list_VALUES_GEOM.String{1}  = sprintf('%i',idGeom);
-                    uiLocal.list_VALUES_THETA.String{1} = sprintf('%i',idThetaMin);
-
-                    % CHORD
-                    uiLocal.list_VALUES_GEOM.String{2}  = sprintf('%.4f',chordGeom);
-                    uiLocal.list_VALUES_THETA.String{2} = sprintf('%.4f',chordTheta);
-
-                    % INCIDENCE
-                    uiLocal.list_VALUES_GEOM.String{3}  = sprintf('%.4f deg',incidenceGeom);
-                    uiLocal.list_VALUES_THETA.String{3} = sprintf('%.4f deg',incidenceTheta);
-
-                    % (X,Y)
-                    uiLocal.list_VALUES_GEOM.String{4}  = sprintf('(%.1e,%.1e)',xGeomLE,yGeomLE);
-                    uiLocal.list_VALUES_THETA.String{4} = sprintf('(%.1e,%.1e)',xThetaLE,yThetaLE);
                     
                     % MESSAGE BOX THAT THE PLOT HAS BEEN UPDATED
                     msgbox('Plot has been updated!','Notice','help');
@@ -431,6 +264,7 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
             uiLocal.list_AIRFOILS_UPDATED.String{end+1} = [uiLocal.list_AIRFOILS.String{idx} ' (nearest LE)'];   
         end
     end
+
 
     % SET NEAREST LE - SETS AIRFOIL LE AS POINT WITH LEAST CURVATURE
     %   FILES - < NONE >
@@ -481,97 +315,11 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
                     xNew = xNew / sf;
                     yNew = yNew / sf;
                     
-                    % UPDATE AIRFOIL PLOT ON AXES
-                    % SET CURRENT AXES IN CASE OTHER WINDOWS / PLOTS ARE OPEN
-                    axes(uiLocal.plot_LE);
-                    cla(uiLocal.plot_LE);
-
-                    % GET AIRFOIL CALCULATED LE LOCATIONS
-                    [idGeom, idThetaMin] = calcLE(xNew,yNew);
-
-                    % GET AIRFOIL TE LOCATION
-                    [xTE, yTE, isBlunt] = locateTE(xNew,yNew);
-                    bufferLocal(idx).isBlunt = isBlunt;
-                    bufferLocal(idx).xTE     = xTE;
-                    bufferLocal(idx).yTE     = yTE;
-
-                    % CHECK IF TE IS ON CENTERLINE
-                    isCenterline = yTE == 0;
-
-                    % CALCULATE CORRESPONDING CHORDS
-                    xGeomLE  = xNew(idGeom);
-                    yGeomLE  = yNew(idGeom);
-                    xThetaLE = xNew(idThetaMin); 
-                    yThetaLE = yNew(idThetaMin);
-                    chordGeom  = norm([xGeomLE-xTE yGeomLE-yTE]);
-                    chordTheta = norm([xThetaLE-xTE yGeomLE-yTE]);
-
-                    % CALCULATE INCIDENCE FOR BOTH CHORDS USING DOT PRODUCT
-                    vUpperGeom  = [xGeomLE-xTE yGeomLE-yTE 0];
-                    vUpperTheta = [xThetaLE-xTE yThetaLE-yTE 0];
-                    vLower      = [-xTE -yTE 0];
-
-                    incidenceGeom  = acosd( dot(vUpperGeom,vLower) / (norm(vUpperGeom)*norm(vLower)) );
-                    incidenceTheta = acosd( dot(vUpperTheta,vLower) / (norm(vUpperTheta)*norm(vLower)) );
-
-                    % STORE POTENTIAL LEs, CHORDs, AND INCIDENCEs TO AIRFOIL BUFFER STRUCTURE
-                    bufferLocal(idx).geomID         = idGeom;
-                    bufferLocal(idx).thetaID        = idThetaMin;
-                    bufferLocal(idx).chordGeom      = chordGeom;
-                    bufferLocal(idx).chordTheta     = chordTheta;
-                    bufferLocal(idx).incidenceGeom  = incidenceGeom;
-                    bufferLocal(idx).incidenceTheta = incidenceTheta;
-
-
-                    % CREATE ARRAY FOR PLOT OBJECTS
-                    pObjs = [];
-                    hold on
-
-                    % PLOT AIRFOIL
-                    pObjs(1) = plot(xNew,yNew,'k.-');
-
-                    % PLOT LE POINTS
-                    pObjs(2) = plot(xNew(idGeom),yNew(idGeom),'bo','markersize',12);
-                    pObjs(3) = plot(xNew(idThetaMin),yNew(idThetaMin),'r*','markersize',12);
-
-                    % PLOT CHORDLINES
-                    pObjs(4) = plot([xTE xGeomLE],[yTE yGeomLE],'--','color',[0.5 0.5 0.5]);
-                    pObjs(5) = plot([xTE xThetaLE],[yTE yThetaLE],'--','color',[0.5 0.5 0.5]);
-
-                    % SETTING PLOT LIMITS TO INCLUDE ALL POINTS ( AND THE ORIGIN )
-                    xVals = [-0.001 0 0.01 xNew(idGeom) xNew(idThetaMin)];
-                    yVals = [-0.01 0 0.01  yNew(idGeom) yNew(idThetaMin)];
-
-                    % PLOT SCALING
-                    %xLimits = [min(xVals) max(xVals)];
-                    %yLimits = [min(yVals) max(yVals)];
-                    %xlim(xLimits)
-                    %ylim(yLimits)
-                    axis equal
-
-                    % PLOT LEGEND
-                    legend(pObjs(2:3),'Nearest to Origin','Minimum Curvature','location','north')
+                    % UPDATE PLOT
+                    updatePlot(xNew,yNew,idx);
                     
                     % SET 'SELECTED AIRFOIL' INDEX TO NEGATIVE SO IT CAN'T BE RE-UPDATED
                     settings.plottedID = -1;
-                    
-                    % UPDATE LIST BOXES
-                    % PUSH LE DATA TO LIST BOXES:
-                    % INDICES
-                    uiLocal.list_VALUES_GEOM.String{1}  = sprintf('%i',idGeom);
-                    uiLocal.list_VALUES_THETA.String{1} = sprintf('%i',idThetaMin);
-
-                    % CHORD
-                    uiLocal.list_VALUES_GEOM.String{2}  = sprintf('%.4f',chordGeom);
-                    uiLocal.list_VALUES_THETA.String{2} = sprintf('%.4f',chordTheta);
-
-                    % INCIDENCE
-                    uiLocal.list_VALUES_GEOM.String{3}  = sprintf('%.4f deg',incidenceGeom);
-                    uiLocal.list_VALUES_THETA.String{3} = sprintf('%.4f deg',incidenceTheta);
-
-                    % (X,Y)
-                    uiLocal.list_VALUES_GEOM.String{4}  = sprintf('(%.1e,%.1e)',xGeomLE,yGeomLE);
-                    uiLocal.list_VALUES_THETA.String{4} = sprintf('(%.1e,%.1e)',xThetaLE,yThetaLE);
                     
                     % MESSAGE BOX THAT THE PLOT HAS BEEN UPDATED
                     msgbox('Plot has been updated!','Notice','help');
@@ -650,5 +398,87 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
             xTE = x(1);
             yTE = y(1);
         end
+    end
+
+    % UPDATE PLOT WITH NEW POINTS CALCULATED
+    function updatePlot(x,y,idx)
+        % SET CURRENT AXES IN CASE OTHER WINDOWS / PLOTS ARE OPEN
+        axes(uiLocal.plot_LE);
+        cla(uiLocal.plot_LE);
+        
+        % GET AIRFOIL CALCULATED LE LOCATIONS
+        [idGeom, idThetaMin] = calcLE(x,y);
+        
+        % GET AIRFOIL TE LOCATION
+        [xTE, yTE, isBlunt] = locateTE(x,y);
+        
+        % STORE TE PROPERTIES TO BUFFER STRUCTURE
+        bufferLocal(idx).isBlunt = isBlunt;
+        bufferLocal(idx).xTE = xTE;
+        bufferLocal(idx).yTE = yTE;
+        
+        % CALCULATE CORRESPONDING CHORDS
+        xGeomLE  = x(idGeom);
+        yGeomLE  = y(idGeom);
+        xThetaLE = x(idThetaMin);
+        yThetaLE = y(idThetaMin);
+        chordGeom  = norm([xGeomLE-xTE yGeomLE-yTE]);
+        chordTheta = norm([xThetaLE-xTE yGeomLE-yTE]);
+        
+        % DETERMINE VECTORS USED FOR CALCULATING INCIDENCE
+        vUpperGeom  = [xGeomLE-xTE yGeomLE-yTE 0];
+        vUpperTheta = [xThetaLE-xTE yThetaLE-yTE 0];
+        vLower = [-xTE -yTE 0];
+        
+        % CALCULATE INCIDENCE FOR BOTH CHORDS USING DOT PRODUCT
+        incidenceGeom  = acosd( dot(vUpperGeom,vLower)  / (norm(vUpperGeom)*norm(vLower))  );
+        incidenceTheta = acosd( dot(vUpperTheta,vLower) / (norm(vUpperTheta)*norm(vLower)) );
+        
+        % STORE POTENTIAL LEs, CHORDs, AND INCIDENCEs TO AIRFOIL BUFFER STRUCTURE
+        bufferLocal(idx).geomID             = idGeom;
+        bufferLocal(idx).thetaID            = idThetaMin;
+        bufferLocal(idx).chordGeom          = chordGeom;
+        bufferLocal(idx).chordTheta         = chordTheta;
+        bufferLocal(idx).incidenceGeom      = incidenceGeom;
+        bufferLocal(idx).incidenceTheta     = incidenceTheta;
+        
+        % CREATE ARRAY FOR PLOT OBJECTS
+        pObjs = [];
+        hold on
+        
+        % PLOT AIRFOIL
+        pObjs(1) = plot(x,y,'k.-');
+        
+        % PLOT LE POINTS
+        pObjs(2) = plot(x(idGeom),y(idGeom),'bo','markersize',12);
+        pObjs(3) = plot(x(idThetaMin),y(idThetaMin),'r*','markersize',12);
+        
+        % PLOT CHORDLINES
+        pObjs(4) = plot([xTE xGeomLE],[yTE yGeomLE],'--','color',[0.5 0.5 0.5]);
+        pObjs(5) = plot([xTE xThetaLE],[yTE yThetaLE],'--','color',[0.5 0.5 0.5]);
+        
+        % SETTING AXIS SCALING
+        axis equal
+        
+        % PLOT LEGEND
+        legend(pObjs(2:3),'Nearest to Origin','Minimum Curvature','location','north');
+        
+        % PUSH LE DATA TO LIST BOXES:
+        % INDICES
+        uiLocal.list_VALUES_GEOM.String{1}  = sprintf('%i',idGeom);
+        uiLocal.list_VALUES_THETA.String{1} = sprintf('%i',idThetaMin);
+        
+        % CHORD
+        uiLocal.list_VALUES_GEOM.String{2}  = sprintf('%.4f',chordGeom);
+        uiLocal.list_VALUES_THETA.String{2} = sprintf('%.4f',chordTheta);
+        
+        % INCIDENCE
+        uiLocal.list_VALUES_GEOM.String{3}  = sprintf('%.4f deg',incidenceGeom);
+        uiLocal.list_VALUES_THETA.String{3} = sprintf('%.4f deg',incidenceTheta);
+        
+        % (X,Y)
+        uiLocal.list_VALUES_GEOM.String{4}  = sprintf('(%.1d,%.1e)',xGeomLE,yGeomLE);
+        uiLocal.list_VALUES_THETA.String{4} = sprintf('(%.1e,%.1e)',xThetaLE,yThetaLE);
+        
     end
 end
