@@ -155,7 +155,8 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
     % M  LISTBOX
     
     % BUTTON GROUP FOR RADIO BUTTONS
-    uiLocal.modeGroup = uibuttongroup('Visible','off','Position',[2*eOff 0.525 width-2*eOff 0.2125],...
+    uiLocal.modeGroup = uibuttongroup('Visible','off',...
+        'Units','normalized','Position',[2*eOff 0.525 width-2*eOff 0.2125],...
         'SelectionChangeFcn',@modeSelection);
     
     % RADIO BUTTON 1 - COMPARE AIRFOILS
