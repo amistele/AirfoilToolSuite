@@ -26,7 +26,7 @@ Tools
 ---------
  - autoXFOIL   : automates XFOIL runs and data processing and formatting
 	       - useful for batch runs and sweeps across flight conditions
- - CamberUtils : airfoil geometry tool. Airfoil coordinate files can be deconstructed into camber and thickness distributions
+ - ctUtils     : airfoil geometry tool. Airfoil coordinate files can be deconstructed into camber and thickness distributions
 	       - camber and thickness distributions can be saved, scaled, and/or added to a buffer
                - camber and thickness distributions can be read in to the buffer
                - from the buffer, airfoil distributions can be scaled and/or interchanged with other airfoils and reconstructed to form new airfoils
