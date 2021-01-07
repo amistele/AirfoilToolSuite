@@ -12,25 +12,37 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
 
     % DECLARE GLOBALS
     global font
+    global plots
+    global airfoil
+    
     addpath('bin')
     
     % PRE-ALLOCATE STRUCTURES
     uiLocal = struct();         % UI ELEMENTS ON LOCAL FIGURE
     settings = struct();        % SETTINGS TO FEED INTO MATH STUFF
     bufferUpdated = struct('x',cell(1,length(bufferLocal)));   % AIRFOILS AFTER LE UPDATES
+    plots = struct();           % PLOT ELEMENTS FOR SOLVER WINDOW
+    airfoil = struct();         % AIRFOIL LOADED TO SOLVER
     
     % DEFINE DEFAULT SETTINGS
-    settings.plottedID      = NaN;
+    settings.plottedID      = NaN; % FOR LE FINDER
+    settings.loaded         = false; % FOR SOLVER
+    
+    
     settings.iterateFrom    = 1; % 1 for LE, 0 for TE
     settings.distribute     = 1; % 1 for COSINE, 0 for LINEAR
     settings.mode           = 1; % 1 for AUTOMATIC, 0 for MANUAL
     
-    for ind = 1:length(bufferLocal)
-        bufferLocal(ind).isBlunt = NaN;
-        bufferLocal(ind).xTE = NaN;
-        bufferLocal(ind).yTE = NaN;
-        bufferLocal(ind).xLE = NaN;
-        bufferLocal(ind).yLE = NaN;
+    settings.numPoints      = 50;
+    settings.stepForce      = 0.2;
+    settings.tolerance      = 1e-10;
+    
+    for i = 1:length(bufferLocal)
+        bufferLocal(i).isBlunt = NaN;
+        bufferLocal(i).xTE = NaN;
+        bufferLocal(i).yTE = NaN;
+        bufferLocal(i).xLE = NaN;
+        bufferLocal(i).yLE = NaN;
     end
     
     % CREATE CTUTILS GUI WINDOW
@@ -99,7 +111,7 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
     
     % SOLVER LABEL
     uiLocal.text_solver     = uicontrol(uiLocal.panel_solver,'Style','text','String','Solver',...
-        'Units','normalized','Position',[0.3 0.9 0.4 0.1],...
+        'Units','normalized','Position',[0.3 0.95 0.4 0.05],...
         'Fontweight','bold','FontSize',12,'FontName',font);
     
     
@@ -179,7 +191,7 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         'Units','normalized','Position',[2*eOff 0.2+4*eOff 1-4*eOff 0.6-4*eOff],...
         'Max',1,'String',{},'FontSize',10,'FontName',font);
     
-    % BUTTON - SEND TO LE FINDER
+    % BUTTON - SEND TO SOLVER
     uiLocal.button_SENDFOIL = uicontrol(uiLocal.panel_lowerLeft,'Style','pushbutton',...
         'String','Send to Cam/Thick Finder','Units','normalized','Position',[2*eOff eOff 1-4*eOff 0.2],...
         'Fontweight','bold','FontSize',10,'FontName',font);
@@ -205,6 +217,18 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         'HorizontalAlignment','left',...
         'Fontweight','bold','Fontsize',10,'FontName',font);
     
+    % TITLE - AUTOMATIC SOLVER
+    uiLocal.title_AUTOMATIC = uicontrol(uiLocal.panel_settings,'Style','text','String','Automatic Solver',...
+        'Units','normalized','position',[eOff+0.2 0.325 0.2-2*eOff 0.125],...
+        'HorizontalAlignment','left',...
+        'Fontweight','bold','FontSize',10,'FontName',font);
+    
+    % TITLE - AUTOMATIC SOLVER DISABLED
+    uiLocal.title_AUTODISABLED = uicontrol(uiLocal.panel_settings,'Style','text','String','(disabled)',...
+        'Units','normalized','position',[0.2+2*eOff 0.15+eOff 0.15-4*eOff 0.125],...
+        'HorizontalAlignment','center',...
+        'FontSize',10,'FontName',font);
+    
     % TITLE - 'MISCELLANEOUS' SETTINGS
     uiLocal.title_MISC      = uicontrol(uiLocal.panel_settings,'Style','text','String','Miscellaneous',...
         'Units','normalized','position',[eOff+0.4 0.75 0.25-2*eOff 0.125],...
@@ -212,13 +236,13 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         'Fontweight','bold','Fontsize',10,'FontName',font);
     
     % TITLE - MANUAL SETTINGS
-    uiLocal.title_MANUAL    = uicontrol(uiLocal.panel_settings,'Style','text','String','Manual Control: Camber Guessing',...
+    uiLocal.title_MANUAL    = uicontrol(uiLocal.panel_settings,'Style','text','String','Manual Solver: Camber Guessing',...
         'Units','normalized','position',[0.655 0.75 0.345-eOff 0.125],...
         'HorizontalAlignment','center',...
         'Fontweight','bold','Fontsize',10,'FontName',font);
     
     % TITLE - MANUAL SETTINGS DISABLED
-    uiLocal.title_DISABLED  = uicontrol(uiLocal.panel_settings,'Style','text','String','(disabled)',...
+    uiLocal.title_MANUALDISABLED  = uicontrol(uiLocal.panel_settings,'Style','text','String','(disabled)',...
         'Units','normalized','position',[0.655 0.5 0.345-eOff 0.125],...
         'HorizontalAlignment','center',...
         'Fontsize',10,'FontName',font);
@@ -239,7 +263,7 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
     
     % RADIO BUTTON - 'COSINE'
     uiLocal.radio_COSINE    = uicontrol(uiLocal.panel_settings,'Style','radiobutton',...
-        'String','cosine','Units','normalized','Value',1,...
+        'String','cosine (recommended)','Units','normalized','Value',1,...
         'Position',[2*eOff 0.1625+0.025 0.2-4*eOff 0.1625-eOff],...
         'FontSize',10,'FontName',font);
     
@@ -262,6 +286,23 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         'Position',[0.2+2*eOff 0.425+0.025+eOff 0.2-4*eOff 0.1625-eOff],...
         'FontSize',10,'FontName',font);
     
+    % PANEL - AUTO CONTROL
+    uiLocal.panel_automatic = uipanel(uiLocal.panel_settings,'Units','normalized',...
+        'Position',[0.2+2*eOff eOff 0.2-4*eOff 0.325]);
+    
+    % BUTTON - START AUTO SOLVER
+    uiLocal.button_START    = uicontrol(uiLocal.panel_automatic,'Style','pushbutton',...
+        'Units','normalized','position',[0 0.5 1 0.5],...
+        'String','Start',...
+        'FontWeight','bold','FontSize',12,'FontName',font);
+    
+    % BUTTON - CLEAR AUTO SOLVER
+    uiLocal.button_CLEAR    = uicontrol(uiLocal.panel_automatic,'Style','pushbutton',...
+        'Units','normalized','position',[0 0 1 0.5],...
+        'String','Clear',...
+        'FontWeight','bold','FontSize',12,'FontName',font);
+    
+    
     
     % LIST BOX - 'MISCELLANEOUS'
     uiLocal.list_MISC       = uicontrol(uiLocal.panel_settings,'Style','list',...
@@ -283,7 +324,8 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
 %% MANUAL SETTINGS UI ELEMENTS
     
     % PANEL - MANUAL STEPPING
-    uiLocal.panel_manual    = uipanel(uiLocal.panel_settings,'Position',[0.655 eOff 1-0.655-eOff/2 0.75-eOff]);
+    uiLocal.panel_manual    = uipanel(uiLocal.panel_settings,'Units','normalized',...
+        'Position',[0.655 eOff 1-0.655-eOff/2 0.75-eOff]);
     
     % TEXT - SLIDER LABEL TOP
     uiLocal.text_SLIDER1    = uicontrol(uiLocal.panel_manual,'Style','text',...
@@ -298,10 +340,10 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
     % SLIDER - GUESS LOCATION
     uiLocal.slider_GUESS    = uicontrol(uiLocal.panel_manual,'Style','slider',...
         'Units','normalized','position',[0.075 eOff 0.1 1-2*eOff],...
-        'Min',0,'Max',1,'Value',0.25,'BackgroundColor',[1 1 1]);
+        'Min',0,'Max',1,'Value',0.5,'BackgroundColor',[1 1 1]);
     
     
-    % TEXT - Height %
+    % TEXT - HEIGHT %
     uiLocal.text_HEIGHT     = uicontrol(uiLocal.panel_manual,'Style','text',...
         'Units','normalized','position',[0.175+eOff 0.8 0.4 0.2],...
         'String','Height %','Fontweight','bold','FontSize',10,'FontName',font);
@@ -328,24 +370,75 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         'Units','normalized','position',[0.175+eOff eOff 0.4 0.2],...
         'String','Seek','FontWeight','bold','FontSize',10,'FontName',font);
     
-    % BUTTON - ACCEPT
-    uiLocal.button_ACCEPT   = uicontrol(uiLocal.panel_manual,'Style','pushbutton',...
-        'Units','normalized','position',[0.575+2*eOff 0.4 0.4 0.4],...
-        'String','Accept','FontWeight','bold','FontSize',12,'FontName',font);
+    % BUTTON - NEXT
+    uiLocal.button_NEXT     = uicontrol(uiLocal.panel_manual,'Style','pushbutton',...
+        'Units','normalized','position',[0.575+2*eOff 0.6 0.4 0.2],...
+        'String','Next','FontWeight','bold','FontSize',12,'FontName',font);
+    
+    % BUTTON - PREVIOUS
+    uiLocal.button_PREV     = uicontrol(uiLocal.panel_manual,'Style','pushbutton',...
+        'Units','normalized','position',[0.575+2*eOff 0.4 0.4 0.2],...
+        'String','Previous','FontWeight','bold','FontSize',12,'FontName',font);
     
     % BUTTON - HELP
     uiLocal.button_HELP     = uicontrol(uiLocal.panel_manual,'Style','pushbutton',...
         'Units','normalized','position',[0.575+2*eOff 0.15+eOff 0.4 0.2],...
         'String','Help','FontWeight','bold','FontSize',10,'FontName',font);
     
-    % SET SOLVER SETTINGS PANEL INACTIVE B/C NO AIRFOIL LOADED INITIALLY
-    %set(uiLocal.panel_settings,'visible','off');
     
     % SET MANUAL CONTROL PANEL INACTIVE B/C AUTO STEPPING DEFAULT
     set(uiLocal.panel_manual,'visible','off');
     
+    % SET SOLVER SETTINGS PANEL INACTIVE B/C NO AIRFOIL LOADED INITIALLY
+    set(uiLocal.panel_settings,'visible','off');
+    
     % SET SOLVER PANEL INACTIVE B/C NO AIRFOIL LOADED INITIALLY
-    %set(uiLocal.panel_solver,'visible','off');
+    set(uiLocal.panel_solver,'visible','off');
+    
+
+%% SOLVER UI ELEMENTS
+    % AIRFOIL AXES
+    % STATION AXES
+    % DISTRIBUTIONS AXES
+
+    % AXES - AIRFOIL
+    uiLocal.plot_AIRFOIL    = axes(uiLocal.panel_solver,'Position',[eOff+0.05 0.5+eOff (2/3)-2*eOff 0.4-2*eOff],...
+        'Box','on','XGrid','on','YGrid','on');
+    
+    % AXES - STATION
+    uiLocal.plot_STATION    = axes(uiLocal.panel_solver,'Position',[(2/3)+eOff+0.1 0.5+eOff (1/3)-0.1-2*eOff 0.4-2*eOff],...
+        'Box','on','XGrid','on','YGrid','on');
+    
+    % AXES - CAMBER
+    uiLocal.plot_CAMBER     = axes(uiLocal.panel_solver,'Position',[eOff+0.05 0.15+eOff 0.5-0.05-2*eOff 0.3-2*eOff],...
+        'Box','on','XGrid','on','YGrid','on');
+    
+    % AXES - THICKNESS
+    uiLocal.plot_THICKNESS  = axes(uiLocal.panel_solver,'Position',[eOff+0.5+0.05 0.15+eOff 0.5-0.05-2*eOff 0.3-2*eOff],...
+        'Box','on','XGrid','on','YGrid','on');
+    
+    
+    % PANEL - FINALIZE SOLUTION
+    uiLocal.panel_final     = uipanel(uiLocal.panel_solver,'Units','normalized',...
+       'position',[0.01 0.005 1-0.02 0.1]);
+    
+    % BUTTON - ACCEPT SOLUTION
+    uiLocal.button_ACCEPT   = uicontrol(uiLocal.panel_final,'Style','pushbutton',...
+        'String','Accept Solution','Units','normalized',...
+        'position',[0.01 0 0.2 1],...
+        'Fontweight','bold','FontSize',12,'FontName',font);
+    
+    % BUTTON - PASS TO MODIFY 
+    uiLocal.button_PUSH    = uicontrol(uiLocal.panel_final,'Style','pushbutton',...
+        'String','Store to Buffer','units','normalized',...
+        'position',[0.22 0 0.2 1],...
+        'Fontweight','bold','FontSize',12,'FontName',font);
+    
+    % BUTTON - WRITE TO FILE
+    uiLocal.button_WRITE    = uicontrol(uiLocal.panel_final,'Style','pushbutton',...
+        'String','Write to File','units','normalized',...
+        'position',[0.43 0 0.2 1],...
+        'Fontweight','bold','FontSize',12,'FontName',font);
     
     
 %% CALLBACK FUNCTION ASSIGNMENTS
@@ -354,17 +447,24 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
     uiLocal.button_SENDLE.Callback      = @sendLE;
     uiLocal.button_SET_NEAR.Callback    = @setGeomLE;
     uiLocal.button_SET_CURVE.Callback   = @setThetaLE;
+    uiLocal.button_SENDFOIL.Callback    = @sendFoil;
+    
     
     % CALLBACKS DEFINED LOCALLY - RIGHT PANEL, RADIO BUTTONS
-        % RADIO BUTTON CALLBACKS ARE A BIT CONVOLUTED BECAUSE I DIDN'T USE
-        % THE UIBUTTONGROUP FEATURE, WHICH MAKES MANAGING THE BUTTONS
-        % EASIER BUT WON'T LET ME POSITION THEM RELATIVELY ON A PANEL
     uiLocal.radio_LE.Callback           = @updateRadioLE;
     uiLocal.radio_TE.Callback           = @updateRadioTE;
     uiLocal.radio_COSINE.Callback       = @updateRadioCosine;
     uiLocal.radio_LINEAR.Callback       = @updateRadioLinear;
     uiLocal.radio_AUTOMATIC.Callback    = @updateRadioAutomatic;
     uiLocal.radio_MANUAL.Callback       = @updateRadioManual;
+        % RADIO BUTTON CALLBACKS ARE A BIT CONVOLUTED BECAUSE I DIDN'T USE
+        % THE UIBUTTONGROUP FEATURE, WHICH MAKES MANAGING THE BUTTONS
+        % EASIER BUT WON'T LET ME POSITION THEM RELATIVELY ON A PANEL
+    
+    % CALLBACKS DEFINED LOCALLY - RIGHT PANEL, LISTBOX ETC
+    uiLocal.list_MISC.Callback      = @selectMiscSetting;
+    %uiLocal.edit_MISC.Callback      = @editMiscSetting;
+    uiLocal.update_MISC.Callback    = @updateMiscSetting;
 
 
 %% CALLBACK FUNCTION DEFINITIONS
@@ -448,23 +548,28 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
                     xNew = bufferLocal(idx).x;
                     yNew = bufferLocal(idx).y;
             end
-            
-            % STORE NEW COORDINATES TO STRUCTURE
-            bufferLocal(idx).xNew = xNew;
-            bufferLocal(idx).yNew = yNew;
-            
-            % ADD AIRFOIL TO UPDATED STRUCTURE
-            fn = fieldnames(bufferLocal);
-            for i = 1:length(fn)
-                bufferUpdated(idx).(fn{i}) = bufferLocal(idx).(fn{i});
-            end
-            bufferUpdated(idx).x = bufferUpdated(end).xNew;
-            bufferUpdated(idx).y = bufferUpdated(end).yNew;
-
-            % UPDATE LISTBOX FOR UDPATED AIRFOILS
-            uiLocal.list_AIRFOILS_UPDATED.String{end+1} = [uiLocal.list_AIRFOILS.String{idx} ' (nearest LE)'];   
-            uiLocal.list_AIRFOILS_UPDATED.Value         = length(uiLocal.list_AIRFOILS_UPDATED.String);
+        else
+            xNew = bufferLocal(idx).x;
+            yNew = bufferLocal(idx).y;
         end
+            
+        % STORE NEW COORDINATES TO STRUCTURE
+        bufferLocal(idx).xNew = xNew;
+        bufferLocal(idx).yNew = yNew;
+        bufferLocal(idx).indLE = bufferLocal(idx).geomID;
+
+        % ADD AIRFOIL TO UPDATED STRUCTURE
+        fn = fieldnames(bufferLocal);
+        for i = 1:length(fn)
+            bufferUpdated(idx).(fn{i}) = bufferLocal(idx).(fn{i});
+        end
+        bufferUpdated(idx).x = bufferUpdated(end).xNew;
+        bufferUpdated(idx).y = bufferUpdated(end).yNew;
+
+        % UPDATE LISTBOX FOR UDPATED AIRFOILS
+        uiLocal.list_AIRFOILS_UPDATED.String{end+1} = [uiLocal.list_AIRFOILS.String{idx} ' (nearest LE)'];   
+        uiLocal.list_AIRFOILS_UPDATED.Value         = length(uiLocal.list_AIRFOILS_UPDATED.String);
+
     end
 
 
@@ -532,25 +637,120 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
                     xNew = bufferLocal(idx).x;
                     yNew = bufferLocal(idx).y;
             end
-            
-            % STORE NEW COORDINATES TO STRUCTURE
-            bufferLocal(idx).xNew = xNew;
-            bufferLocal(idx).yNew = yNew;
-            
-            % ADD AIRFOIL TO UPDATED STRUCTURE
-            fn = fieldnames(bufferLocal);
-            for i = 1:length(fn)
-                bufferUpdated(idx).(fn{i}) = bufferLocal(idx).(fn{i});
-            end
-            bufferUpdated(end).x = bufferUpdated(end).xNew;
-            bufferUpdated(end).y = bufferUpdated(end).yNew;
-
-            % UPDATE LISTBOX FOR UDPATED AIRFOILS
-            uiLocal.list_AIRFOILS_UPDATED.String{end+1} = [uiLocal.list_AIRFOILS.String{idx} ' (curvature LE)'];
-            uiLocal.list_AIRFOILS_UPDATED.Value         = length(uiLocal.list_AIRFOILS_UPDATED.String);
+        else
+            xNew = bufferLocal(idx).x;
+            yNew = bufferLocal(idx).y;
         end
+            
+        % STORE NEW COORDINATES TO STRUCTURE
+        bufferLocal(idx).xNew = xNew;
+        bufferLocal(idx).yNew = yNew;
+        bufferLocal(idx).indLE = bufferLocal(idx).thetaID;
+
+        % ADD AIRFOIL TO UPDATED STRUCTURE
+        fn = fieldnames(bufferLocal);
+        for i = 1:length(fn)
+            bufferUpdated(idx).(fn{i}) = bufferLocal(idx).(fn{i});
+        end
+        bufferUpdated(end).x = bufferUpdated(end).xNew;
+        bufferUpdated(end).y = bufferUpdated(end).yNew;
+
+        % UPDATE LISTBOX FOR UDPATED AIRFOILS
+        uiLocal.list_AIRFOILS_UPDATED.String{end+1} = [uiLocal.list_AIRFOILS.String{idx} ' (curvature LE)'];
+        uiLocal.list_AIRFOILS_UPDATED.Value         = length(uiLocal.list_AIRFOILS_UPDATED.String);
+        
     end
     
+
+    % SEND AIRFOIL FROM LE FINDER TO CAM/THICK SOLVER
+    %   FILES - < NONE >
+    function sendFoil(src,event)
+        % CHECK TO SEE IF A FOIL HAS BEEN SELECTED - IF NOT, ABORT
+        if isempty(uiLocal.list_AIRFOILS_UPDATED.String)
+            return
+        end
+        
+        % CHECK IF A FOIL HAS ALREADY BEEN SENT PREVIOUSLY, PROMPT TO OVERWRITE
+        if settings.loaded
+            question = 'Loading this new foil to the solver will clear the currently loaded airfoil. Do you wish to proceed?';
+            ans = questdlg(question,'Warning','yes','no','yes');
+            
+            % IF NO OVERWRITE, ABORT
+            switch ans
+                case 'Yes'
+                    return
+            end
+        end
+        
+        % MAKE SOLVER SETTINGS AND SOLVER PANELS VISIBLE
+        set(uiLocal.panel_settings,'Visible','on');
+        set(uiLocal.panel_solver,'Visible','on');
+        
+        % SET 'AIRFOIL' STRUCT AS THE AIRFOIL FROM THE BUFFER
+        airfoil = bufferUpdated(uiLocal.list_AIRFOILS_UPDATED.Value);
+        
+        % SORT UPPER AND LOWER SURFACES OF THE AIRFOIL
+        airfoil.xUpper = airfoil.x(1:airfoil.indLE);
+        airfoil.yUpper = airfoil.y(1:airfoil.indLE);
+        airfoil.xLower = airfoil.x(airfoil.indLE:end);
+        airfoil.yLower = airfoil.y(airfoil.indLE:end);
+        
+        
+        % PLOT TO MAIN AIRFOIL WINDOW ON THE SOLVER PANEL
+        axes(uiLocal.plot_AIRFOIL);
+        cla(uiLocal.plot_AIRFOIL);
+        
+        % CREATE ARRAY FOR PLOT OBJECTS
+        plots.solverPObjs = [];
+        hold on;
+        axis equal;
+        
+        % PLOT AIRFOIL
+        plots.solver.pObjs(1) = plot(airfoil.x, airfoil.y,'k.-');
+        
+        % PLOT BOUNDARY CONDITION
+        switch settings.iterateFrom
+            % LE BOUNDARY CONDITION
+            case 1
+                plots.solver.pObjs(2) = plot(airfoil.xLE, airfoil.yLE,'mo','markersize',10);
+                
+            % TE BOUNDARY CONDITION
+            case 2
+                plots.solver.pObjs(2) = plot(airfoil.xTE, airfoil.yTE,'mo','markersize',10);
+                
+        end
+        
+        % PLOT CHORD AND CAMBER STATIONS
+        % DO THE MATH
+        switch settings.distribute
+            % COSINE SPACING
+            case 1
+                % GET NUMBER OF POINTS
+                n = settings.numPoints;
+                
+                % GET CHORD LINE
+                [xChord, yChord] = cosspace2([airfoil.xLE airfoil.yLE],[airfoil.xTE airfoil.yTE],n);
+                airfoil.xChord = xChord;
+                airfoil.yChord = yChord;
+        
+            % LINEAR SPACING
+            case 2
+                % GET NUMBER OF POINTS
+                n = settings.numPoints;
+                
+                % GET CHORD LINE
+                [xChord,yChord] = cosspace([airfoil.xLE airfoil.yLE],[airfoil.xTE airfoil.yTE],n);
+                airfoil.xChord = xChord;
+                airfoil.yChord = yChord;
+        end
+        
+        % DO THE PLOTTING
+        updatePlotSpacing(airfoil.xChord,airfoil.yChord);
+        
+        % AN AIRFOIL IS NOW LOADED - NOTE THIS FOR OTHER FUNCTIONS
+        settings.loaded = true;
+    end
+
 
     % UPDATE RADIO BUTTONS - ITERATE FROM - ON LE CLICK
     %   FILES - < NONE >
@@ -559,7 +759,7 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         if uiLocal.radio_TE.Value == 0
             uiLocal.radio_LE.Value = 1;
         
-        % IF RADIO IS NOT SET TO LE, UPDATE BOTH RADIO BUTTONS
+        % IF RADIO IS NOT SET TO LE, UPDATE BOTH RADIO BUTTONS AND AIRFOIL PLOT
         else 
             % UPDATE BUTTON VALUES
             uiLocal.radio_LE.Value = 1;
@@ -567,6 +767,10 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
             
             % UPDATE SOLVER SETTINGS
             settings.iterateFrom = 1;
+            
+            % UPDATE PLOT
+            delete(plots.solver.pObjs(2));
+            plots.solver.pObjs(2) = plot(uiLocal.plot_AIRFOIL,airfoil.xLE, airfoil.yLE,'mo','markersize',10);
         end
         
     end
@@ -579,7 +783,7 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         if uiLocal.radio_LE.Value == 0
             uiLocal.radio_TE.Value = 1;
         
-        % IF RADIO IS NOT SET TO TE, UPDATE BOTH RADIO BUTTONS
+        % IF RADIO IS NOT SET TO TE, UPDATE BOTH RADIO BUTTONS, AND AIRFOIL PLOT
         else
             % UPDATE BUTTON VALUES
             uiLocal.radio_LE.Value = 0;
@@ -587,7 +791,10 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
             
             % UPDATE SOLVER SETTINGS
             settings.iterateFrom = 0;
-        
+            
+            % UPDATE AIRFOIL PLOT
+            delete(plots.solver.pObjs(2));
+            plots.solver.pObjs(2) = plot(uiLocal.plot_AIRFOIL,airfoil.xTE, airfoil.yTE,'mo','markersize',10);
 
         end
     end
@@ -600,7 +807,7 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         if uiLocal.radio_LINEAR.Value == 0
             uiLocal.radio_COSINE.Value = 1;
             
-        % IF RADIO IS NOT SET TO COSINE, UPDATE BOTH RADIO BUTTONS
+        % IF RADIO IS NOT SET TO COSINE, UPDATE BOTH RADIO BUTTONS AND PLOT
         else
             % UPDATE BUTTON VALUES
             uiLocal.radio_COSINE.Value = 1;
@@ -608,6 +815,16 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
             
             % UPDATE SOLVER SETTINGS
             settings.distribute = 1;
+            
+            % UPDATE CHORD LINE AND STATIONS
+            n = settings.numPoints;
+            [xChord, yChord] = cosspace2([airfoil.xLE airfoil.yLE],[airfoil.xTE airfoil.yTE],n);
+            airfoil.xChord = xChord;
+            airfoil.yChord = yChord;
+            
+            % UPDATE PLOT OBJECTS
+            updatePlotSpacing(airfoil.xChord,airfoil.yChord);
+            
         end
     end
 
@@ -619,7 +836,7 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         if uiLocal.radio_COSINE.Value == 0
             uiLocal.radio_LINEAR.Value = 1;
         
-        % IF RADIO IS NOT SET TO LIENAR, UPDATE BOTH RADIO BUTTONS
+        % IF RADIO IS NOT SET TO LINEAR, UPDATE BOTH RADIO BUTTONS AND PLOT
         else
             % UPDATE BUTTON VALUES
             uiLocal.radio_COSINE.Value = 0;
@@ -627,6 +844,16 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
             
             % UPDATE SOLVER SETTINGS
             settings.distribute = 0;
+            
+            % UPDATE CHORD LINE AND STATIONS
+            n = settings.numPoints;
+            [xChord, yChord] = linspace2([airfoil.xLE airfoil.yLE],[airfoil.xTE airfoil.yTE],n);
+            airfoil.xChord = xChord;
+            airfoil.yChord = yChord;
+            
+            % UPDATE PLOT OBJECTS
+            updatePlotSpacing(airfoil.xChord,airfoil.yChord);
+            
         end
     end
 
@@ -648,6 +875,7 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
             settings.mode = 1;
             
             % SET MANUAL CONTROL PANEL TO INVISIBLE
+            set(uiLocal.panel_automatic,'Visible','on');
             set(uiLocal.panel_manual,'Visible','off');
         end
     end
@@ -670,8 +898,116 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
             settings.mode = 0;
             
             % SET MANUAL CONTROL PANEL TO VISIBLE
+            set(uiLocal.panel_automatic,'Visible','off');
             set(uiLocal.panel_manual,'Visible','on');
         end
+    end
+
+
+    % SELECT MISCELLANEOUS SETTING - ON CLICK, UDPATE EDIT BOX VALUE
+    %   FILES - < NONE >
+    function selectMiscSetting(src,event)
+        % GET STRING CORRESPONDING TO SELECT ELEMENT
+        ind = uiLocal.list_MISC.Value;
+        
+        % GET ASSOCIATED VALUE
+        switch ind
+            % IF N# POINTS IS SELECTED
+            case 1
+                val = settings.numPoints;
+            case 2
+                val = settings.stepForce;
+            case 3
+                val = settings.tolerance;
+        end
+        
+        % SET EDIT BOX VALUE TO STRING OF THIS
+        uiLocal.edit_MISC.String = num2str(val);
+    end
+
+
+    % UPDATE MISCELLANEOUS SETTING - ON CLICK, PUSH EDIT BOX VALUE TO LIST
+    %   FILES - < NONE >
+    function updateMiscSetting(src,event)
+        % GET ENTERED VALUE
+        str = uiLocal.edit_MISC.String;
+        num = str2num(str);
+        
+        % CHECK FOR VALID NUMBER
+        if isempty(num)
+            msgbox('Invalid entry!','Error','error')
+            return
+        end
+        
+        % GET INDEX OF SELECTED SETTING
+        idx = uiLocal.list_MISC.Value;
+        
+        % CHECK VALIDITY OF THE NUMBER GIVEN THE SETTING SELECTED
+        switch idx
+            % CASE FOR NUMBER OF POINTS
+            case 1
+                % SET ERROR MESSAGE STRING
+                errorStr = 'Invalid Entry! Value must be an integer between 10 and 100 (inclusive).';
+                
+                % CATCH INVALID ENTRIES
+                if num < 10 || num > 100
+                    msgbox(errorStr,'Error','error');
+                    return
+                
+                % CATCH NON-INTEGER ENTRIES
+                elseif mod(num,1) ~= 0
+                    msgbox(errorStr,'Error','error')
+                    return
+                
+                % IF VALID, UPDATE LISTBOX AND SETTINGS
+                else
+                    % UPDATE LISTBOX
+                    uiLocal.list_MISC.String{1} = sprintf('# points: %i',num);
+                    
+                    % UPDATE SETTINGS
+                    settings.numPoints = num;
+                end
+                
+            % CASE FOR STEP FORCE
+            case 2
+                % SET ERROR MESSAGE STRING
+                errorStr = 'Invalid Entry! Value must be a fraction or decimal between 0.01 and 1 (inclusive).';
+                
+                % CATCH INVALID ENTRIES
+                if num < 1/100 || num > 1
+                    msgbox(errorStr,'Error','error');
+                    return
+                
+                % IF VALID, UPDATE LISTBOX AND SETTINGS
+                else
+                    % UPDATE LISTBOX
+                    uiLocal.list_MISC.String{2} = sprintf('step force: %.2f',num);
+                    
+                    % UPDATE SETTINGS
+                    settings.numPoints = num;
+                end
+                
+            % CASE FOR TOLERANCE
+            case 3
+                % SET ERROR MESSAGE STRING
+                errorStr = 'Invalid Entry! Value must be between 1e-5 and 1e-15 (inclusive).';
+                
+                % CATCH INVALID ENTRIES
+                if num < 1e-15 || num > 1e-5
+                    msgbox(errorStr,'Error','error');
+                    return
+                    
+                % IF VALID, UPDATE LISTBOX AND SETTINGS
+                else
+                    % UDPATE LISTBOX
+                    uiLocal.list_MISC.String{3} = sprintf('tol: %.1e',num);
+                    
+                    % UPDATE SETTINGS
+                    settings.toperance = num;
+                end
+        end
+        
+        
     end
 
 
@@ -807,6 +1143,57 @@ function ui_ctUtilsFinder(bufferLocal,listString,fParent)
         % (X,Y)
         uiLocal.list_VALUES_GEOM.String{4}  = sprintf('(%.1d,%.1e)',xGeomLE,yGeomLE);
         uiLocal.list_VALUES_THETA.String{4} = sprintf('(%.1e,%.1e)',xThetaLE,yThetaLE);
+        
+    end
+
+    % CALCULATE 2D LINSPACE
+    function [x,y] = linspace2(point1,point2,n)
+        % LINSPACE IN X
+        x = linspace(point1(1), point2(1), n);
+        
+        % LINSPACE IN Y
+        y = linspace(point1(2), point2(2), n);
+    end
+
+    % CALCULATE 2D COSSPACE
+    function [x,y] = cosspace2(point1,point2,n)
+        % DEFINE COS DOMAIN
+        theta = linspace(0,pi,n);
+        
+        % COSSPACE IN X
+        x = ((point2(1)-point1(1))/2)*(1-cos(theta));
+        
+        % COSSPACE IN Y
+        y = ((point2(2)-point1(2))/2)*(1-cos(theta));
+    end
+
+    % UPDATE PLOT SPACING - CHANGE CHORD AND STATION PLOTTING TO THE GIVEN SET OF POINTS
+    function updatePlotSpacing(xChord,yChord)
+        % NUMBER OF POINTS
+        n = length(xChord);
+        
+        % PLOT CHORDLINE
+        % DELETE PREVIOUS VERSION IF ONE HAS BEEN LOADED
+        if settings.loaded
+            delete(plots.solver.pObjs(3));
+        end
+        axis(uiLocal.plot_AIRFOIL); hold on;
+        plots.solver.pObjs(3) = plot(xChord, yChord,'--s','color',[0.5 0.5 0.5],'markersize',4);
+        
+        % CALCULATE STATION POINTS ON UPPER AND LOWER SURFACES OF THE AIRFOIL
+        yStationUpper = interp1(airfoil.xUpper,airfoil.yUpper,xChord);
+        yStationLower = interp1(airfoil.xLower,airfoil.yLower,xChord);
+        
+        % PLOT ALL OF THESE STATIONS
+        for j = 1:length(xChord)
+            % DELETE PREVIOUS VERSION IF ONE HAS BEEN PLOTTED
+            if settings.loaded
+                delete(plots.solver.chordPlots(j))
+            end
+            
+            % PLOT THE STATIONS
+            plots.solver.chordPlots(j) = plot([xChord(j) xChord(j)],[yStationLower(j) yStationUpper(j)],'--','color',[0.75 0.75 0.75]);
+        end
         
     end
 end
