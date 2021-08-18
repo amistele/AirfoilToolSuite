@@ -378,7 +378,7 @@ function ui_autoXFOIL(bufferLocal,listString,fParent)
             if ~isempty(newName)
                 id = uiLocal.list_AIRFOILS.Value;
                 uiLocal.list_AIRFOILS.String(id) = newName;
-                bufferLocal(id).name = newName;
+                bufferLocal(id).name = newName{1};
             end
                 
         end

@@ -234,7 +234,7 @@ function autoXFOIL(bufferLocal,settings)
                 if invisc
                     titleMinor = 'Inviscid';
                 else
-                    titleMinor = sprtinf('RN = %.2e',re);
+                    titleMinor = sprintf('RN = %.2e',re);
                 end
         end
 
