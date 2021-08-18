@@ -3,4 +3,6 @@ xfoil-format.docx
 *.dat
 bin/autoXFOIL_legacy.m
 curveTest.m
-
+archive/
+reports/
+temp/
